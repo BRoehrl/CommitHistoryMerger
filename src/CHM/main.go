@@ -14,7 +14,7 @@ func init() {
 	connConf = git.Config{
 		GitUrl:           "https://api.github.com",
 		BaseOrganisation: "/informationgrid",
-		GitAuthkey:       "QlJvZWhybDpZcCFtSzZGMw=="}
+		GitAuthkey:       "QlJvZWhybDppVk4zSlJNTGZjeVh4eFU="}
 
 	git.SetConfig(connConf)
 }

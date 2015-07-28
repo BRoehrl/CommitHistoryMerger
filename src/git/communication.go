@@ -23,7 +23,7 @@ var (
 func init() {
 	gitUrl = "https://api.github.com"
 	baseOrganisation = "/informationgrid"
-	gitAuthkey = "QlJvZWhybDpZcCFtSzZGMw=="
+	gitAuthkey = ""
 }
 
 type Config struct {
@@ -121,13 +121,12 @@ func (r Repo) GetFirstNCommits(n int) (commits []JsonCommit, err error) {
 	return
 }
 
-// GetAllCommitsUntil returns all commits commited before Date d
+// GetAllCommitsUntil returns all commits commited before Date to and after Date from
 // Note that for each 100 querries a new request is sent
-func (r Repo) GetAllCommitsUntil(d time.Time) (commits []JsonCommit, err error) {
+func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JsonCommit, err error) {
 	currentPage := 1
 	for {
-		d.Format(time.RFC3339)
-		query := gitUrl + "/repos" + baseOrganisation + "/" + r.Name + "/commits?since=" + d.Format(time.RFC3339) + "&per_page=100&page=" + strconv.Itoa(currentPage)
+		query := gitUrl + "/repos" + baseOrganisation + "/" + r.Name + "/commits?since=" + from.Format(time.RFC3339) + "&until=" + to.Format(time.RFC3339) + "&per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var singlePage []JsonCommit
 		err = UnmarshalFromGetResponse(query, &singlePage)
@@ -139,4 +138,10 @@ func (r Repo) GetAllCommitsUntil(d time.Time) (commits []JsonCommit, err error) 
 
 	}
 	return
+}
+
+// GetAllCommitsUntil returns all commits commited after Date d
+// Note that for each 100 querries a new request is sent
+func (r Repo) GetAllCommitsUntil(d time.Time) (commits []JsonCommit, err error) {
+	return r.GetAllCommitsBetween(time.Now(), d)
 }

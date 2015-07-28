@@ -20,6 +20,7 @@ var cachedShas map[string]bool
 var cachedAuthors map[string]bool
 var cachedRepos map[string]bool
 var cacheTime time.Time
+var allRepos git.Repos
 
 type Commits []Commit
 
@@ -45,13 +46,15 @@ func flushCommitCache() {
 	cacheTime = time.Now()
 }
 
-func GetGitCommits(since time.Time) (err error) {
-	allRepos, err := git.GetRepositories()
+func GetGitCommits(from, to time.Time) (err error) {
+	if len(cachedRepos) == 0 {
+		allRepos, err = git.GetRepositories()
+	}
 	if err != nil {
 		return
 	}
 	for _, repo := range allRepos {
-		singleRepoCommits, err := repo.GetAllCommitsUntil(since)
+		singleRepoCommits, err := repo.GetAllCommitsBetween(from, to)
 		if err != nil {
 			return err
 		}
@@ -68,10 +71,6 @@ func GetGitCommits(since time.Time) (err error) {
 		}
 	}
 	sort.Sort(cachedCommits)
-	if since.Before(cacheTime) {
-		cacheTime = since
-	}
-
 	return
 }
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"git"
 	"net/http"
@@ -9,18 +10,28 @@ import (
 )
 
 var connConf git.Config
+var authFlag string
+var portFlag int
 
 func init() {
-	connConf = git.Config{
-		GitUrl:           "https://api.github.com",
-		BaseOrganisation: "/informationgrid",
-		GitAuthkey:       "QlJvZWhybDppVk4zSlJNTGZjeVh4eFU="}
-
-	git.SetConfig(connConf)
+	flag.StringVar(&authFlag, "auth", "", "Git Basic Authentification key")
+	flag.IntVar(&portFlag, "port", 2506, "Webserver port")
 }
 
 func main() {
+	flag.Parse()
+	
+	connConf = git.Config{
+		GitUrl:           "https://api.github.com",
+		BaseOrganisation: "/informationgrid",
+		GitAuthkey:       ""}
 
+	if authFlag != "" {
+		connConf.GitAuthkey = authFlag
+	}
+
+	git.SetConfig(connConf)
+	
 	RunCHM()
 
 }
@@ -31,9 +42,9 @@ type Config struct {
 
 func RunCHM() {
 
-	var config = Config{
-		Port: 2506,
-	}
+	var config = Config{}
+	
+	config.Port = portFlag
 
 	fmt.Println("starting CHM...")
 

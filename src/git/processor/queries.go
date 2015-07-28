@@ -15,10 +15,11 @@ type Query struct {
 func GetCommits(query Query) (commits Commits) {
 	commits = Commits{}
 	if query.Since.Before(cacheTime) {
-		err := GetGitCommits(query.Since)
+		err := GetGitCommits(query.Since, cacheTime)
 		if err != nil {
 			fmt.Println(err)
 		}
+		cacheTime = query.Since
 	}
 	for _, commit := range cachedCommits {
 		keep := true

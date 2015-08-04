@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 	 {{template "headAndNavbar.html" .}}
@@ -7,42 +6,43 @@
     <div class="row">
       <div data-spy="scroll" data-target="#details" data-offset="12" class="test2">
         <div class="col-md-6 list">
-		  <input type="submit" class="btn btn-lg btn-block btn-default" name="pw" value="Submit Button">
-		  {{range .ButtonNames}}<button class="btn btn-lg btn-block btn-default">{{.}}</button>{{end}}
-          <button class="btn btn-lg btn-block btn-default">Commit 2</button>
+		  <button type="button" class="btn btn-lg btn-block btn-default" onclick="detailView()">Commit 1</button>
+		  <button class="btn btn-lg btn-block btn-default">Commit 2</button>
+		  {{range .Buttondata}}<button class="btn btn-lg btn-block btn-default" onclick="getCommit('{{.Id}}')">{{.Name}}</button>{{end}}          
         </div>
       </div>
       <div class="col-md-6 detail">
         <h1>Commit Details</h1>
         <div class="form-group">
           <label>Message</label>
-          <p class="TODO">this is a message</p>
+          <p id="message">this is a message</p>
         </div>
         <div class="form-group">
           <label>Author</label>
-          <p class="TODO">this is a message</p>
+          <p id="author">this is a message</p>
         </div>
         <div class="form-group">
           <label>Sha</label>
-          <p class="TODO">this is a message</p>
+          <p id="sha">this is a message</p>
         </div>
         <div class="form-group">
           <label>Repository</label>
-          <p class="TODO">this is a message</p>
+          <p id="repository">this is a message</p>
         </div>
         <div class="form-group">
           <label>Commit Date</label>
-          <p class="TODO">this is a message</p>
+          <p id="date">this is a message</p>
+        </div>
+		<div class="form-group">
+          <label>GitHub Link</label>
+          <p></p>
+          <a id="link" target="_blank" href="123" >Test</a>
         </div>
       </div>
     </div>
-  </div>
-		
-		
-		<!-- Bootstrap core JavaScript
-		================================================== -->
-		<!-- Placed at the end of the document so the pages load faster -->
+  </div>	
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 		<script src="/static/js/bootstrap.min.js"></script>
+		<script src="/static/js/chm.js"></script>
 	</body>
 </html>

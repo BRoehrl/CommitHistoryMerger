@@ -74,6 +74,19 @@ func GetGitCommits(from, to time.Time) (err error) {
 	return
 }
 
+func GetSingleCommit(sha string) (singleCommit Commit){
+	if !cachedShas[sha]{
+		return
+	}
+	for _, com := range(cachedCommits){
+		if com.Sha == sha{
+			singleCommit = com
+			return
+		}
+	}
+	return
+}
+
 func addCommitsToCache(newCommits Commits) {
 	for _, nc := range newCommits {
 		addSingleCommitToCache(nc, false)

@@ -67,6 +67,13 @@ var routes = Routes{
 		CommitShow,
 	},
 	Route{
+		"SingleCommit",
+		"GET",
+		"/commits/{sha}",
+		nil,
+		ShowSingleCommit,
+	},
+	Route{
 		"SetConfig",
 		"GET",
 		"/setConfig={jsonString:(?s).*}",

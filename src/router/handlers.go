@@ -17,7 +17,11 @@ import (
 
 type Page struct {
 	Title       string
-	ButtonNames []string
+	Buttondata []Buttondata
+}
+type Buttondata struct {
+	Name string
+	Id string
 }
 
 const (
@@ -38,12 +42,12 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	query := processor.Query{Since: threeMonthAgo}
 	queryResult := processor.GetCommits(query)
 	
-	commitNames := []string{}
+	commitData := []Buttondata{}
 	for _, com := range(queryResult){
 		formatedName := com.Time.Format(time.RFC822)[:7] + com.Comment
-		commitNames = append(commitNames, formatedName)
+		commitData = append(commitData, Buttondata{formatedName, com.Sha})
 	}
-	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, ButtonNames: commitNames}) //Page{Title: "Home"})
+	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: commitData}) //Page{Title: "Home"})
 }
 
 func shutdownCHM(w http.ResponseWriter, r *http.Request) {
@@ -68,12 +72,30 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, ButtonNames: processor.GetCachedAuthors()})
+	authorButtons := []Buttondata{}
+	for _, author := range(processor.GetCachedAuthors()){
+		authorButtons = append(authorButtons, Buttondata{author, author})
+	}
+	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: authorButtons})
 }
 func ReposShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(processor.GetCachedRepos()); err != nil {
+		panic(err)
+	}
+}
+
+
+func ShowSingleCommit(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	vars := mux.Vars(r)
+	sha, ok := vars["sha"]
+	if !ok {
+		// TODO
+	}
+	if err := json.NewEncoder(w).Encode(processor.GetSingleCommit(sha)); err != nil {
 		panic(err)
 	}
 }

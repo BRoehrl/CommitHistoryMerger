@@ -4,18 +4,46 @@ import (
 	"encoding/json"
 	"fmt"
 	"git/processor"
+	"html/template"
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 )
 
+type Page struct {
+	Title       string
+	ButtonNames []string
+}
+
+const (
+	TITLE = "CHM"
+)
+
+var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html"))
+
 func Index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome!")
-	fmt.Fprintln(w, "")
+	w.Header().Set("Content-type", "text/html")
+	err := r.ParseForm()
+	fmt.Println("Formvalue:",r.FormValue("user"))
+	fmt.Println("Formvalue:",r.FormValue("pw"))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+	}
+	threeMonthAgo := time.Now().AddDate(0, -3, 0)
+	query := processor.Query{Since: threeMonthAgo}
+	queryResult := processor.GetCommits(query)
+	
+	commitNames := []string{}
+	for _, com := range(queryResult){
+		formatedName := com.Time.Format(time.RFC822)[:7] + com.Comment
+		commitNames = append(commitNames, formatedName)
+	}
+	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, ButtonNames: commitNames}) //Page{Title: "Home"})
 }
 
 func shutdownCHM(w http.ResponseWriter, r *http.Request) {
@@ -26,12 +54,21 @@ func Log(w http.ResponseWriter, r *http.Request) {
 	w.Write(LogBuffer.Bytes())
 }
 
-func AuthorsShow(w http.ResponseWriter, r *http.Request) {
+func AuthorsShowJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(processor.GetCachedAuthors()); err != nil {
 		panic(err)
 	}
+}
+
+func AuthorsShow(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html")
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+	}
+	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, ButtonNames: processor.GetCachedAuthors()})
 }
 func ReposShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -92,4 +129,25 @@ func GetConfig(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode("Test"); err != nil {
 		panic(err)
 	}
+}
+
+// RangeStructer takes the first argument, which must be a struct, and
+// returns the value of each field in a slice. It will return nil
+// if there are no arguments or first argument is not a struct
+func RangeStructer(args ...interface{}) []interface{} {
+	if len(args) == 0 {
+		return nil
+	}
+
+	v := reflect.ValueOf(args[0])
+	if v.Kind() != reflect.Struct {
+		return nil
+	}
+
+	out := make([]interface{}, v.NumField())
+	for i := 0; i < v.NumField(); i++ {
+		out[i] = v.Field(i).Interface()
+	}
+
+	return out
 }

@@ -2,8 +2,8 @@ package processor
 
 import (
 	"fmt"
-	"time"
 	"sort"
+	"time"
 )
 
 type Query struct {

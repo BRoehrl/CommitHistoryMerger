@@ -4,23 +4,27 @@ import (
 	"flag"
 	"fmt"
 	"git"
+	"log"
 	"net/http"
 	"router"
-	"strconv"
 )
 
 var connConf git.Config
 var authFlag string
 var portFlag int
+var host string
+
 
 func init() {
 	flag.StringVar(&authFlag, "auth", "", "Git Basic Authentification key")
 	flag.IntVar(&portFlag, "port", 2506, "Webserver port")
+	flag.StringVar(&host, "host", "127.0.0.1", "Webserver host IP")
+	
 }
 
 func main() {
 	flag.Parse()
-	
+
 	connConf = git.Config{
 		GitUrl:           "https://api.github.com",
 		BaseOrganisation: "/informationgrid",
@@ -31,7 +35,7 @@ func main() {
 	}
 
 	git.SetConfig(connConf)
-	
+
 	RunCHM()
 
 }
@@ -43,13 +47,17 @@ type Config struct {
 func RunCHM() {
 
 	var config = Config{}
-	
+
 	config.Port = portFlag
 
 	fmt.Println("starting CHM...")
 
 	router := router.NewRouter()
 
-	fmt.Println("starting server on Port", strconv.Itoa(config.Port))
-	panic(http.ListenAndServe(":"+strconv.Itoa(config.Port), router))
+	addr := fmt.Sprintf("%s:%d", host, config.Port)
+	fmt.Println("starting server on:", addr)
+	err := http.ListenAndServe(addr, router)
+	if err != nil {
+		log.Fatal("ListenAndServe error: ", err)
+	}
 }

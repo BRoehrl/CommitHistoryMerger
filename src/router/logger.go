@@ -11,10 +11,10 @@ import (
 
 var LogBuffer *bytes.Buffer
 
-func init() {
+/*func init() {
 	LogBuffer = new(bytes.Buffer)
 	log.SetOutput(LogBuffer)
-}
+}*/
 
 func Logger(inner http.Handler, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

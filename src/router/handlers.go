@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -23,6 +22,7 @@ type Buttondata struct {
 	Name       string
 	Id         string
 	DateString string
+	Repository string
 }
 
 const (
@@ -34,14 +34,18 @@ var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 
-//	threeMonthAgo := time.Now().AddDate(0, -3, 0)
-//	query := processor.Query{Since: threeMonthAgo}
-	queryResult := processor.Commits{}//processor.GetCommits(query)
+	//	threeMonthAgo := time.Now().AddDate(0, -3, 0)
+	//	query := processor.Query{Since: threeMonthAgo}
+	vars := mux.Vars(r)
+
+	query := getQueryFromVars(vars)
+
+	queryResult := processor.GetCommits(query)
 
 	commitData := []Buttondata{}
 	for _, com := range queryResult {
-		formatedDate := com.Time.Format(time.RFC822)[:7]
-		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate})
+		formatedDate := com.Time.Format(time.RFC822)[:10]
+		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo})
 	}
 	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: commitData}) //Page{Title: "Home"})
 }
@@ -70,7 +74,7 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	}
 	authorButtons := []Buttondata{}
 	for _, author := range processor.GetCachedAuthors() {
-		authorButtons = append(authorButtons, Buttondata{author, author, ""})
+		authorButtons = append(authorButtons, Buttondata{author, author, "", ""})
 	}
 	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: authorButtons})
 }
@@ -94,10 +98,38 @@ func ShowSingleCommit(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 }
+
 func CommitShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	vars := mux.Vars(r)
+
+	query := getQueryFromVars(vars)
+
+	queryResult := processor.GetCommits(query)
+
+	if err := json.NewEncoder(w).Encode(queryResult); err != nil {
+		panic(err)
+	}
+}
+
+func SetConfig(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	jsonString := vars["jsonString"]
+	jsonString = strings.Replace(jsonString, "+", "", -1)
+	fmt.Fprintln(w, jsonString)
+	if err := json.NewDecoder(strings.NewReader(jsonString)).Decode(&[]string{}); err != nil {
+		fmt.Fprintln(w, err)
+		return
+	}
+}
+func GetConfig(w http.ResponseWriter, r *http.Request) {
+	if err := json.NewEncoder(w).Encode("Test"); err != nil {
+		panic(err)
+	}
+}
+
+func getQueryFromVars(vars map[string]string) processor.Query {
 
 	threeMonthAgo := time.Now().AddDate(0, -3, 0)
 	query := processor.Query{Since: threeMonthAgo}
@@ -123,48 +155,7 @@ func CommitShow(w http.ResponseWriter, r *http.Request) {
 		if d, err := time.Parse(time.RFC3339, since); err == nil {
 			query.Since = d
 		}
-	}
 
-	queryResult := processor.GetCommits(query)
-
-	if err := json.NewEncoder(w).Encode(queryResult); err != nil {
-		panic(err)
 	}
-}
-
-func SetConfig(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	jsonString := vars["jsonString"]
-	jsonString = strings.Replace(jsonString, "+", "", -1)
-	fmt.Fprintln(w, jsonString)
-	if err := json.NewDecoder(strings.NewReader(jsonString)).Decode(&[]string{}); err != nil {
-		fmt.Fprintln(w, err)
-		return
-	}
-}
-func GetConfig(w http.ResponseWriter, r *http.Request) {
-	if err := json.NewEncoder(w).Encode("Test"); err != nil {
-		panic(err)
-	}
-}
-
-// RangeStructer takes the first argument, which must be a struct, and
-// returns the value of each field in a slice. It will return nil
-// if there are no arguments or first argument is not a struct
-func RangeStructer(args ...interface{}) []interface{} {
-	if len(args) == 0 {
-		return nil
-	}
-
-	v := reflect.ValueOf(args[0])
-	if v.Kind() != reflect.Struct {
-		return nil
-	}
-
-	out := make([]interface{}, v.NumField())
-	for i := 0; i < v.NumField(); i++ {
-		out[i] = v.Field(i).Interface()
-	}
-
-	return out
+	return query
 }

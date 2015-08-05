@@ -18,25 +18,30 @@ function getCommit(id) {
 function openDialog(filterBy) {
 	switch(filterBy) {
 			case 'Author':
-				dialog = document.getElementById('dialogAuthor')
+				var dialog = document.getElementById('dialogAuthor')
 				break;
 			case 'Repository':
-				dialog = document.getElementById('dialogAuthor')
+				var dialog = document.getElementById('dialogRepo')
+				break;
+			case 'Date':
+				var dialog = document.getElementById('dialogDate')
 				break;
 			default:
 				return;
 		}
-	dialog.showModal()
-
+	dialog.show()
 }
 
 function closeDialog(filterBy) {
 	switch(filterBy) {
 			case 'Author':
-				dialog = document.getElementById('dialogAuthor')
+				var dialog = document.getElementById('dialogAuthor')
 				break;
 			case 'Repository':
-				dialog = document.getElementById('dialogAuthor')
+				var dialog = document.getElementById('dialogRepo')
+				break;
+			case 'Date':
+				var dialog = document.getElementById('dialogDate')
 				break;
 			default:
 				return;
@@ -44,3 +49,26 @@ function closeDialog(filterBy) {
 	dialog.close()
 }
 
+function sendTag(tagType){
+	var tagBar = document.getElementById('tagBar');
+	
+	switch(tagType) {
+			
+			case 'Author':
+				var tagInput = document.getElementById('authorTag')
+				if (tagInput != "") $(tagBar).tagsinput('add', 'Author:' + tagInput.value)
+				break;
+			case 'Repository':
+				var tagInput = document.getElementById('repoTag')
+				if (tagInput != "") $(tagBar).tagsinput('add', 'Repo:' + tagInput.value)
+				break;
+			case 'Date':
+				var tagInput = document.getElementById('dateTag')
+				if (tagInput != "") $(tagBar).tagsinput('add', 'Since:' + tagInput.value)
+				break;
+			default:
+				return;
+		}
+	tagInput.value = "";
+	closeDialog(tagType)
+}

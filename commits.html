@@ -4,92 +4,96 @@
 	<div class="section">
 		<div class="container-fluid">
 			<div class="row filterrow">
-				<div class="col-xs-1">
-					<div class="dropdown" align="right">
-						<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Filter<span class="caret"></span>
-						</button>
-						<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+				<div class="input-group">
+					<div class="input-group-btn">
+						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">filter <span class="caret"></span></button>
+						<ul class="dropdown-menu">
 							<li><a onclick="openDialog('Author')" href="javascript:void(0);">Author</a></li>
 							<li><a onclick="openDialog('Repository')" href="javascript:void(0);">Repository</a></li>
 							<li><a onclick="openDialog('Date')" href="javascript:void(0);">Date</a></li>
-							<li><a onclick="openDialog('Message')" href="javascript:void(0);">Message</a></li>
 						</ul>
 					</div>
+					<input type="text" id="tagBar" value="Amsterdam" data-role="tagsinput"/>
 				</div>
-				<div class="col-xs-11">
-					<input type="text" class="tagsinput" value="Amsterdam,Washington,Sydney,Beijing,Cairo" data-role="tagsinput"/>
-				</div>
-				<!--<button type="button" class="btn btn-default btn-sm">Small2<span aria-hidden="true">&times;</span></button>-->
 			</div>
 		</div>
 	</div>
 	<div class="section">
-    <div class="container-fluid">
-		<div class="row">
-			<div data-spy="scroll" data-target="#details" data-offset="12" class="test2">
-				<div class="col-md-6 list">
-					<button type="button" class="btn btn-lg btn-block btn-default" onclick="detailView()">Commit 1</button>
-					<button class="btn btn-lg btn-block btn-default">Commit 2</button>
-					{{range .Buttondata}}<button class="btn btn-lg btn-block btn-default" onclick="getCommit('{{.Id}}')">
-						<div class="comCommentText">
-							<text>  {{.Name}}</text>
-						</div>
-						<div class="comDateText">
-							<text>  {{.DateString}}</text>
-						</div>
-					</button>{{end}}          
+		<div class="container-fluid">
+			<div class="row">
+				<div data-spy="scroll" data-target="#details" data-offset="12" class="test2">
+					<div class="col-md-6 list">
+						{{range .Buttondata}}<button class="btn btn-lg btn-block btn-default" onclick="getCommit('{{.Id}}')">
+							<div class="comCommentText">
+								<text>  {{.Name}}</text>
+								<span class="badge">{{.Repository}}</span>
+							</div>
+							<div class="comDateText">
+								<text>  {{.DateString}}</text>
+							</div>
+						</button>{{end}}          
+					</div>
+				</div>
+				<div class="col-md-6 detail">
+					<h1>Commit Details</h1>
+					<div class="form-group">
+						<label>Message</label>
+						<p id="message"></p>
+					</div>
+					<div class="form-group">
+						<label>Author</label>
+						<p id="author"></p>
+					</div>
+					<div class="form-group">
+						<label>Sha</label>
+						<p id="sha"></p>
+					</div>
+					<div class="form-group">
+						<label>Repository</label>
+						<p id="repository"></p>
+					</div>
+					<div class="form-group">
+						<label>Commit Date</label>
+						<p id="date"></p>
+					</div>
+					<div class="form-group">
+						<label>GitHub Link</label>
+						<p></p>
+						<a id="link" target="_blank" href="/" ></a>
+					</div>
 				</div>
 			</div>
-			<div class="col-md-6 detail">
-				<h1>Commit Details</h1>
-				<div class="form-group">
-					<label>Message</label>
-					<p id="message">this is a message</p>
-				</div>
-				<div class="form-group">
-					<label>Author</label>
-					<p id="author">this is a message</p>
-				</div>
-				<div class="form-group">
-					<label>Sha</label>
-					<p id="sha">this is a message</p>
-				</div>
-				<div class="form-group">
-					<label>Repository</label>
-					<p id="repository">this is a message</p>
-				</div>
-				<div class="form-group">
-					<label>Commit Date</label>
-					<p id="date">this is a message</p>
-				</div>
-				<div class="form-group">
-					<label>GitHub Link</label>
-					<p></p>
-					<a id="link" target="_blank" href="123" >Test</a>
-				</div>
-			</div>
 		</div>
-		</div>
-		</div>
-		<dialog id="dialogAuthor">
-		  <form action="#" method="post" _lpchecked="1">
-			<label for="email">Bitte geben Sie Ihre Email-Adresse an: </label><input id="email" type="email">
-		  </form>  
-		  <button id="Anmeldung">Anmelden</button>
-		  <button id="Abbruch" onclick="closeDialog('Author')">Abbrechen</button>
-		</dialog>
-		<dialog id="dialogRepo">
-		  <form action="#" method="post" _lpchecked="1">
-			<label for="email">Bitte geben Sie Ihre Repo-Adresse an: </label><input id="email" type="email">
-		  </form>  
-		  <button id="Anmeldung">Anmelden</button>
-		  <button onclick="closeDialog('Repository')"id="Abbruch">Abbrechen</button>
-		</dialog>
-
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-		<script src="/static/js/bootstrap.min.js"></script>
-		<script src="/static/js/chm.js"></script>
-		<script src="/static/js/bootstrap-tagsinput.min.js"></script>
-		</body>
-		</html>
-				
+	</div>
+	<dialog id="dialogAuthor">
+		<form action="javascript:sendTag('Author')">
+			<label for="authorTag">Please enter Author name</label><input id="authorTag">
+		</form>  
+		<button onclick="sendTag('Author')">Add Tag</button>
+		<button onclick="closeDialog('Author')">Cancel</button>
+	</dialog>
+	<dialog id="dialogRepo">
+		<form action="javascript:sendTag('Repository')">
+			<label for="repoTag">Please enter Repository name: </label><input id="repoTag">
+		</form>  
+		<button onclick="sendTag('Repository')">Add Tag</button>
+		<button onclick="closeDialog('Repository')">Cancel</button>
+	</dialog>
+	<dialog id="dialogDate">
+		<form>
+			<label for="dateTag">Please select a Date: </label><input class="datepicker" id="dateTag">
+			<button onclick="sendTag('Date')">Add Tag</button>
+		</form>  
+		<button onclick="closeDialog('Date')">Cancel</button>
+	</dialog>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<script src="/static/js/chm.js"></script>
+	<script src="/static/js/tagBar.js"></script>
+	<script src="/static/js/bootstrap-datepicker.js"></script>
+	<script src="/static/js/bootstrap-tagsinput.min.js"></script>
+	<script>
+		$('.datepicker').datepicker({ format: "yyyy-mm-dd"});
+	</script>
+</body>
+</html>

@@ -33,7 +33,16 @@ var routes = Routes{
 		"Index",
 		"GET",
 		"/",
-		nil,
+		[][]string{
+			[]string{"author", "{author}", "repo", "{repo}", "since", "{date}"},
+			[]string{"author", "{author}", "repo", "{repo}"},
+			[]string{"author", "{author}", "since", "{date}"},
+			[]string{"repo", "{repo}", "since", "{date}"},
+			[]string{"author", "{author}"},
+			[]string{"repo", "{repo}"},
+			[]string{"since", "{date}"},
+			nil,
+		},
 		Index,
 	},
 	Route{

@@ -3,7 +3,7 @@ function detailView() {
 }
 
 function getCommit(id) {
-	$.getJSON('/commits/'+id, function(data){
+	$.getJSON('/json/commits/'+id, function(data){
 		document.getElementById("message").innerHTML = data.Comment;
 		document.getElementById("author").innerHTML = data.Author;
 		document.getElementById("sha").innerHTML = data.Sha;
@@ -13,5 +13,34 @@ function getCommit(id) {
 		document.getElementById("link").innerHTML = '../commit/'+data.Sha;
 	});
 	
+}
+
+function openDialog(filterBy) {
+	switch(filterBy) {
+			case 'Author':
+				dialog = document.getElementById('dialogAuthor')
+				break;
+			case 'Repository':
+				dialog = document.getElementById('dialogAuthor')
+				break;
+			default:
+				return;
+		}
+	dialog.showModal()
+
+}
+
+function closeDialog(filterBy) {
+	switch(filterBy) {
+			case 'Author':
+				dialog = document.getElementById('dialogAuthor')
+				break;
+			case 'Repository':
+				dialog = document.getElementById('dialogAuthor')
+				break;
+			default:
+				return;
+		}
+	dialog.close()
 }
 

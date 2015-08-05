@@ -46,14 +46,14 @@ var routes = Routes{
 	Route{
 		"ReposShow",
 		"GET",
-		"/repos",
+		"/json/repos",
 		nil,
 		ReposShow,
 	},
 	Route{
 		"CommitShow",
 		"GET",
-		"/commits",
+		"/json/commits",
 		[][]string{
 			[]string{"author", "{author}", "repo", "{repo}", "since", "{date}"},
 			[]string{"author", "{author}", "repo", "{repo}"},
@@ -69,21 +69,21 @@ var routes = Routes{
 	Route{
 		"SingleCommit",
 		"GET",
-		"/commits/{sha}",
+		"/json/commits/{sha}",
 		nil,
 		ShowSingleCommit,
 	},
 	Route{
 		"SetConfig",
 		"GET",
-		"/setConfig={jsonString:(?s).*}",
+		"/json/setConfig={jsonString:(?s).*}",
 		nil,
 		SetConfig,
 	},
 	Route{
 		"Config",
 		"GET",
-		"/config",
+		"/json/config",
 		nil,
 		GetConfig,
 	},

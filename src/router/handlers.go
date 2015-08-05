@@ -16,12 +16,13 @@ import (
 )
 
 type Page struct {
-	Title       string
+	Title      string
 	Buttondata []Buttondata
 }
 type Buttondata struct {
-	Name string
-	Id string
+	Name       string
+	Id         string
+	DateString string
 }
 
 const (
@@ -32,20 +33,15 @@ var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
-	err := r.ParseForm()
-	fmt.Println("Formvalue:",r.FormValue("user"))
-	fmt.Println("Formvalue:",r.FormValue("pw"))
-	if err != nil {
-		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
-	}
-	threeMonthAgo := time.Now().AddDate(0, -3, 0)
-	query := processor.Query{Since: threeMonthAgo}
-	queryResult := processor.GetCommits(query)
-	
+
+//	threeMonthAgo := time.Now().AddDate(0, -3, 0)
+//	query := processor.Query{Since: threeMonthAgo}
+	queryResult := processor.Commits{}//processor.GetCommits(query)
+
 	commitData := []Buttondata{}
-	for _, com := range(queryResult){
-		formatedName := com.Time.Format(time.RFC822)[:7] + com.Comment
-		commitData = append(commitData, Buttondata{formatedName, com.Sha})
+	for _, com := range queryResult {
+		formatedDate := com.Time.Format(time.RFC822)[:7]
+		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate})
 	}
 	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: commitData}) //Page{Title: "Home"})
 }
@@ -73,8 +69,8 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
 	authorButtons := []Buttondata{}
-	for _, author := range(processor.GetCachedAuthors()){
-		authorButtons = append(authorButtons, Buttondata{author, author})
+	for _, author := range processor.GetCachedAuthors() {
+		authorButtons = append(authorButtons, Buttondata{author, author, ""})
 	}
 	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: authorButtons})
 }
@@ -85,7 +81,6 @@ func ReposShow(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 }
-
 
 func ShowSingleCommit(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")

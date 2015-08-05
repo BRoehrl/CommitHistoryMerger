@@ -14,12 +14,12 @@ body {
     overflow: auto;
     position: absolute;
     bottom: 0;
-    top: 90px;
+    top: 190px;
 }
 .detail {
     position: fixed;
     right: 0;
     overflow: auto;
     bottom: 0;
-    top: 90px;
+    top: 190px;
 }

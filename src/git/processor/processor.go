@@ -9,6 +9,7 @@ import (
 type Commit struct {
 	Sha,
 	Repo,
+	Branch,
 	Author,
 	Link,
 	Comment string
@@ -36,13 +37,13 @@ func (c Commits) Less(i, j int) bool {
 
 func init() {
 	flushCommitCache()
+	cachedRepos = make(map[string]bool)
 }
 
 func flushCommitCache() {
 	cachedCommits = Commits{}
 	cachedShas = make(map[string]bool)
 	cachedAuthors = make(map[string]bool)
-	cachedRepos = make(map[string]bool)
 	cacheTime = time.Now()
 }
 
@@ -62,6 +63,7 @@ func GetGitCommits(from, to time.Time) (err error) {
 			newCommit := Commit{
 				Sha:     gitCom.Sha,
 				Repo:    repo.Name,
+				Branch:  repo.SelectedBranch,
 				Author:  gitCom.ActualCommit.Author.Name,
 				Link:    gitCom.HtmlUrl,
 				Comment: gitCom.ActualCommit.Message,
@@ -74,12 +76,12 @@ func GetGitCommits(from, to time.Time) (err error) {
 	return
 }
 
-func GetSingleCommit(sha string) (singleCommit Commit){
-	if !cachedShas[sha]{
+func GetSingleCommit(sha string) (singleCommit Commit) {
+	if !cachedShas[sha] {
 		return
 	}
-	for _, com := range(cachedCommits){
-		if com.Sha == sha{
+	for _, com := range cachedCommits {
+		if com.Sha == sha {
 			singleCommit = com
 			return
 		}

@@ -60,6 +60,20 @@ var routes = Routes{
 		ReposShow,
 	},
 	Route{
+		"RepositoryHtml",
+		"GET",
+		"/repositories",
+		nil,
+		ReposShowHtml,
+	},
+	Route{
+		"RepoBranchChange",
+		"POST",
+		"/repositories/{repo}/{branch}",
+		nil,
+		RepoBranchChange,
+	},
+	Route{
 		"CommitShow",
 		"GET",
 		"/json/commits",

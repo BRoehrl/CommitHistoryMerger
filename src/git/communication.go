@@ -88,6 +88,29 @@ func UnmarshalFromGetResponse(url string, i interface{}) (err error) {
 func GetRepositories() (allRepos Repos, err error) {
 	repoQuery := gitUrl + "/orgs" + baseOrganisation + "/repos?per_page=100"
 	err = UnmarshalFromGetResponse(repoQuery, &allRepos)
+	if err != nil {
+		return
+	}
+	allRepos, err = AddBranchesToRepos(allRepos)
+	return
+}
+
+func AddBranchesToRepos(allRepos Repos) (reposWithBranches Repos, err error) {
+	for _, repo := range allRepos {
+		branchQuery := gitUrl + "/repos" + baseOrganisation + "/" + repo.Name + "/branches?per_page=100"
+		branches := []Branch{}
+		err = UnmarshalFromGetResponse(branchQuery, &branches)
+		if err != nil {
+			return
+		}
+		branchMap := make(map[string]string)
+		for _, b := range branches {
+			branchMap[b.Name] = b.Commit.Sha
+		}
+		repo.SelectedBranch = repo.DefaultBranch
+		repo.Branches = branchMap
+		reposWithBranches = append(reposWithBranches, repo)
+	}
 	return
 }
 
@@ -126,7 +149,12 @@ func (r Repo) GetFirstNCommits(n int) (commits []JsonCommit, err error) {
 func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JsonCommit, err error) {
 	currentPage := 1
 	for {
-		query := gitUrl + "/repos" + baseOrganisation + "/" + r.Name + "/commits?since=" + from.Format(time.RFC3339) + "&until=" + to.Format(time.RFC3339) + "&per_page=100&page=" + strconv.Itoa(currentPage)
+		query := gitUrl + "/repos" + baseOrganisation
+		query += "/" + r.Name
+		query += "/commits?since=" + from.Format(time.RFC3339) + "&until=" + to.Format(time.RFC3339)
+		query += "&sha=" + r.Branches[r.SelectedBranch]
+		query += "&per_page=100&page=" + strconv.Itoa(currentPage)
+
 		currentPage++
 		var singlePage []JsonCommit
 		err = UnmarshalFromGetResponse(query, &singlePage)
@@ -139,6 +167,7 @@ func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JsonCommit, er
 	}
 	return
 }
+
 
 // GetAllCommitsUntil returns all commits commited after Date d
 // Note that for each 100 querries a new request is sent

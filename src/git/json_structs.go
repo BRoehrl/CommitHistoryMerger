@@ -5,11 +5,14 @@ import (
 )
 
 type Repo struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Url      string `json:"url"`
-	HtmlUrl  string `json:"html_url"`
-	Language string `json:"language"`
+	Id             int    `json:"id"`
+	Name           string `json:"name"`
+	Url            string `json:"url"`
+	HtmlUrl        string `json:"html_url"`
+	Language       string `json:"language"`
+	DefaultBranch  string `json:"default_branch"`
+	Branches       map[string]string
+	SelectedBranch string
 }
 
 type Repos []Repo
@@ -41,6 +44,11 @@ type SimpleCommit struct {
 	Committer SimpleUser `json:"committer"`
 	Message   string     `json:"message"`
 	Url       string     `json:"url"`
+}
+
+type Branch struct {
+	Name   string     `json:"name"`
+	Commit JsonCommit `json:"commit"`
 }
 
 type SortableCommits []JsonCommit

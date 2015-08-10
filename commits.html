@@ -22,11 +22,11 @@
 		<div class="container-fluid">
 			<div class="row">
 				<div data-spy="scroll" data-target="#details" data-offset="12" class="test2">
-					<div class="col-md-6 list">
+					<div class="col-md-6 col-xs-6 list">
 						{{range .Buttondata}}<button class="btn btn-lg btn-block btn-default" onclick="getCommit('{{.Id}}')">
 							<div class="comCommentText">
-								<text>  {{.Name}}</text>
-								<span class="badge">{{.Repository}}</span>
+								<label>  {{.Name}}</label>
+								<span class="badge pull-right hidden-xs">{{.Repository}}</span>
 							</div>
 							<div class="comDateText">
 								<text>  {{.DateString}}</text>
@@ -34,7 +34,7 @@
 						</button>{{end}}          
 					</div>
 				</div>
-				<div class="col-md-6 detail">
+				<div class="col-md-6 col-xs-6 detail">
 					<h1>Commit Details</h1>
 					<div class="form-group">
 						<label>Message</label>

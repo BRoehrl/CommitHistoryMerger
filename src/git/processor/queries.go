@@ -1,7 +1,9 @@
 package processor
 
 import (
+	"errors"
 	"fmt"
+	"git"
 	"sort"
 	"time"
 )
@@ -12,8 +14,14 @@ type Query struct {
 	Since   time.Time
 }
 
+var aBranchChanged bool
+
 func GetCommits(query Query) (commits Commits) {
 	commits = Commits{}
+	if aBranchChanged {
+		flushCommitCache()
+		aBranchChanged = false
+	}
 	if query.Since.Before(cacheTime) {
 		err := GetGitCommits(query.Since, cacheTime)
 		if err != nil {
@@ -69,4 +77,35 @@ func GetCachedRepos() (repos []string) {
 	}
 	sort.Strings(repos)
 	return
+}
+func GetCachedRepoObjects() (repos git.Repos, err error) {
+	if len(cachedRepos) == 0 {
+		allRepos, err = git.GetRepositories()
+	}
+	for _, repo := range allRepos {
+		cachedRepos[repo.Name] = true
+	}
+	return allRepos, err
+}
+
+func SetRepoBranch(repoName, branchName string) (err error) {
+	if !cachedRepos[repoName] {
+		return errors.New("Repository not found/cached: " + repoName)
+	}
+	for i, repo := range allRepos {
+		if repo.Name == repoName {
+			for branch := range repo.Branches {
+				if branch == branchName {
+					if repo.SelectedBranch != branch {
+						repo.SelectedBranch = branch
+						aBranchChanged = true
+						allRepos[i] = repo;
+					}
+					return
+				}
+			}
+			return errors.New("Repository found, but no Branch named: " + branchName)
+		}
+	}
+	return errors.New("Repository found, but not in allRepos: " + repoName)
 }

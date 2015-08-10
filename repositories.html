@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+	{{template "headAndNavbar.html" .}}
+	<form class="form-horizontal" role="form">
+  {{range .RepoData}}
+  <div class="row filledrow">
+	<div class="col-sm-3 col-xs-6"><label>{{.Name}}</label><span class="badge pull-right">{{.NrBranches}}</span></div>
+	<div class="col-sm-9 col-xs-6"><select class="form-control" name="{{.Name}}">
+	{{range .Branches}}<option value="{{.}}">{{.}}</option>{{end}}
+  </select>
+  </div>
+  </div>{{end}}          
+</form>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<script src="/static/js/repos.js"></script>
+</body>
+</html>

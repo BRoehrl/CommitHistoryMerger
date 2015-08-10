@@ -6,8 +6,9 @@ body {
   text-align: center;
 }
 
-.btn {
+.btn-lg {
   text-align: left;
+  white-space: normal;
 }
 
 .list {
@@ -27,12 +28,19 @@ body {
 .filterrow {
   border: 1px solid rgba(0,61,124,.2);
   margin-bottom: 2px;
-  background-color: rgba(0,31,124,.9);;
+  background-color: rgba(0,31,124,.9);
+}
+
+.filledrow{
+  display: table;
 }
 
 .row {
   margin-bottom: 1px;
 }
+
+
+
 .row .row {
   margin-top: 2px;
   margin-bottom: 2px;
@@ -45,9 +53,12 @@ body {
   background-color: rgba(0,61,124,.15);
   border: 1px solid #ddd;
   border: 1px solid rgba(0,61,124,.2);
+  float: none;
+  display: table-cell;
+  vertical-align: middle;
 }
 
-[class*="col-xs"] {
+[class*="col-xsNONONO"] {
   padding-top: 5px;
   padding-bottom: 15px;
   background-color: white; 
@@ -68,7 +79,7 @@ hr {
 .comCommentText{
    font-size: 16px;
    text-align: left;
-    color: teal;
+   color: teal;
     
 }
 

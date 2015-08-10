@@ -17,6 +17,12 @@ import (
 type Page struct {
 	Title      string
 	Buttondata []Buttondata
+	RepoData   []Repodata
+}
+type Repodata struct {
+	Name       string
+	Branches   []string
+	NrBranches int
 }
 type Buttondata struct {
 	Name       string
@@ -29,7 +35,7 @@ const (
 	TITLE = "CHM"
 )
 
-var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html"))
+var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html"))
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
@@ -45,7 +51,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	commitData := []Buttondata{}
 	for _, com := range queryResult {
 		formatedDate := com.Time.Format(time.RFC822)[:10]
-		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo})
+		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch})
 	}
 	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: commitData}) //Page{Title: "Home"})
 }
@@ -78,6 +84,43 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	}
 	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: authorButtons})
 }
+
+func ReposShowHtml(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html")
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+	}
+	repos, err := processor.GetCachedRepoObjects()
+	if err != nil {
+		panic(err)
+	}
+	repodata := []Repodata{}
+	for _, repo := range repos {
+		branches := []string{repo.SelectedBranch}
+		for branch := range repo.Branches {
+			if branch != repo.SelectedBranch {
+				branches = append(branches, branch)
+			}
+		}
+		repodata = append(repodata, Repodata{repo.Name, branches, len(branches)})
+
+	}
+	templates.ExecuteTemplate(w, "repositories.html", Page{Title: TITLE, RepoData: repodata})
+}
+func RepoBranchChange(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	repo, ok := vars["repo"]
+	if !ok { // TODO send error
+		return
+	}
+	branch, ok := vars["branch"]
+	if !ok { // TODO send error
+		return
+	}
+	processor.SetRepoBranch(repo, branch)
+}
+
 func ReposShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)

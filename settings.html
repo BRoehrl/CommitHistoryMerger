@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	{{template "headAndNavbar.html" .}}
+		<div class="container">
+			<h2 class="row" style="">Base Settings</h2>
+
+			<h4 class="row">Auth Key<input type="text" placeholder="key" class="form-control" contenteditable="false" id="authKey" style=""></h4>
+
+			<h4 class="row">Git Base Organisation<input type="text" placeholder="infromationgrid" class="form-control" contenteditable="false" id="baseOrg" style=""></h4>
+
+			<h4 class="row">Git Api URL<input type="text" placeholder="https://api.github.com" class="form-control" id="baseUrl"></h4>
+
+		</div>
+
+		<div class="container settingsContainer">
+			<h2 class="row" style="">Fetch Settings</h2>
+
+			<h4 class="row">Default 'Since' filter<input type="text" placeholder="3m00d" class="form-control" id="sinceTime"></h4>
+
+			<h4 class="row">Max number of Branches<input type="text" placeholder="100" class="form-control" id="maxBranches"></h4>
+
+			<h4 class="row">Max number of Repositories<input type="text" placeholder="0" class="form-control" id="maxRepos"></h4>
+			<div class="clearfix">
+			<p class="pull-right fixSave">
+				<button class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
+			</p>
+		</div>
+		</div>
+		
+		
+		
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<script src="/static/js/bootstrap.min.js"></script>
+	</body>
+</html>

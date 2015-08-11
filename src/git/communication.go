@@ -86,7 +86,7 @@ func UnmarshalFromGetResponse(url string, i interface{}) (err error) {
 
 // GetRepositories returns all or the first 100 repositories of the baseOrganisation.
 func GetRepositories() (allRepos Repos, err error) {
-	repoQuery := gitUrl + "/orgs" + baseOrganisation + "/repos?per_page=100"
+	repoQuery := gitUrl + "/orgs/" + baseOrganisation + "/repos?per_page=100"
 	err = UnmarshalFromGetResponse(repoQuery, &allRepos)
 	if err != nil {
 		return
@@ -97,7 +97,7 @@ func GetRepositories() (allRepos Repos, err error) {
 
 func AddBranchesToRepos(allRepos Repos) (reposWithBranches Repos, err error) {
 	for _, repo := range allRepos {
-		branchQuery := gitUrl + "/repos" + baseOrganisation + "/" + repo.Name + "/branches?per_page=100"
+		branchQuery := gitUrl + "/repos/" + baseOrganisation + "/" + repo.Name + "/branches?per_page=100"
 		branches := []Branch{}
 		err = UnmarshalFromGetResponse(branchQuery, &branches)
 		if err != nil {
@@ -116,7 +116,7 @@ func AddBranchesToRepos(allRepos Repos) (reposWithBranches Repos, err error) {
 
 // GetCommits returns the 100 newest commits for the specified repository
 func (r Repo) GetCommits() (commits []JsonCommit, err error) {
-	query := gitUrl + "/repos" + baseOrganisation + "/" + r.Name + "/commits?per_page=100"
+	query := gitUrl + "/repos/" + baseOrganisation + "/" + r.Name + "/commits?per_page=100"
 	err = UnmarshalFromGetResponse(query, &commits)
 	return
 }
@@ -126,7 +126,7 @@ func (r Repo) GetCommits() (commits []JsonCommit, err error) {
 func (r Repo) GetFirstNCommits(n int) (commits []JsonCommit, err error) {
 	currentPage := 1
 	for {
-		query := gitUrl + "/repos" + baseOrganisation + "/" + r.Name + "/commits?per_page=100&page=" + strconv.Itoa(currentPage)
+		query := gitUrl + "/repos/" + baseOrganisation + "/" + r.Name + "/commits?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var singlePage []JsonCommit
 		err = UnmarshalFromGetResponse(query, &singlePage)
@@ -149,7 +149,7 @@ func (r Repo) GetFirstNCommits(n int) (commits []JsonCommit, err error) {
 func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JsonCommit, err error) {
 	currentPage := 1
 	for {
-		query := gitUrl + "/repos" + baseOrganisation
+		query := gitUrl + "/repos/" + baseOrganisation
 		query += "/" + r.Name
 		query += "/commits?since=" + from.Format(time.RFC3339) + "&until=" + to.Format(time.RFC3339)
 		query += "&sha=" + r.Branches[r.SelectedBranch]

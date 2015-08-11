@@ -35,7 +35,7 @@ const (
 	TITLE = "CHM"
 )
 
-var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html"))
+var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html"))
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
@@ -83,6 +83,15 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 		authorButtons = append(authorButtons, Buttondata{author, author, "", ""})
 	}
 	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: authorButtons})
+}
+
+func SettingsShow(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html")
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+	}
+	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE})
 }
 
 func ReposShowHtml(w http.ResponseWriter, r *http.Request) {

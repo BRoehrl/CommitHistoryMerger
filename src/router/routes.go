@@ -53,6 +53,13 @@ var routes = Routes{
 		AuthorsShow,
 	},
 	Route{
+		"SettingsShow",
+		"GET",
+		"/settings",
+		nil,
+		SettingsShow,
+	},
+	Route{
 		"ReposShow",
 		"GET",
 		"/json/repos",

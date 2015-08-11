@@ -1,10 +1,6 @@
 body {
   padding-top: 50px;
 }
-.starter-template {
-  padding: 40px 15px;
-  text-align: center;
-}
 
 .btn-lg {
   text-align: left;
@@ -72,8 +68,6 @@ body {
 }
 
 .repoCol {
-  padding-top: 5px;
-  padding-bottom: 15px;
   background-color: white; 
   border: 2px solid rgba(0,61,124,.2);
   color: teal;
@@ -106,8 +100,18 @@ hr {
    height: 12px;
 }
 
-.badge{
-  padding: 1px 9px 2px;
+.form-horizontal{
+  padding-top: 2px;
+} 
+
+.fixSave{
+  position: fixed; 
+  bottom: 10px; 
 }
 
+
+
+.settingsContainer{
+  padding-bottom: 70px;
+}
 

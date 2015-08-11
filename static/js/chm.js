@@ -50,6 +50,8 @@ function closeDialog(filterBy) {
 }
 
 function sendTag(tagType){
+	closeDialog(tagType)
+	
 	var tagBar = document.getElementById('tagBar');
 	
 	switch(tagType) {
@@ -70,5 +72,5 @@ function sendTag(tagType){
 				return;
 		}
 	tagInput.value = "";
-	closeDialog(tagType)
+	
 }

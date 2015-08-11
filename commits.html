@@ -26,10 +26,14 @@
 						{{range .Buttondata}}<button class="btn btn-lg btn-block btn-default" onclick="getCommit('{{.Id}}')">
 							<div class="comCommentText">
 								<label>  {{.Name}}</label>
-								<span class="badge pull-right hidden-xs">{{.Repository}}</span>
 							</div>
-							<div class="comDateText">
+							<div class="row comDateText">
+								<div class="col-xs-6 noColStyle pull-left">
 								<text>  {{.DateString}}</text>
+								</div>
+								<div class="col-xs-6 noColStyle pull-right hidden-xs">
+								<text>  {{.Repository}}</text>
+								</div>
 							</div>
 						</button>{{end}}          
 					</div>
@@ -80,10 +84,9 @@
 		<button onclick="closeDialog('Repository')">Cancel</button>
 	</dialog>
 	<dialog id="dialogDate">
-		<form>
-			<label for="dateTag">Please select a Date: </label><input class="datepicker" id="dateTag">
+			<label for="dateTag">Please select a Date: </label>
+			<input class="datepicker" id="dateTag">
 			<button onclick="sendTag('Date')">Add Tag</button>
-		</form>  
 		<button onclick="closeDialog('Date')">Cancel</button>
 	</dialog>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -93,7 +96,7 @@
 	<script src="/static/js/bootstrap-datepicker.js"></script>
 	<script src="/static/js/bootstrap-tagsinput.min.js"></script>
 	<script>
-		$('.datepicker').datepicker({ format: "yyyy-mm-dd"});
+		$('.datepicker').datepicker({ format: "yyyy-mm-dd" });
 	</script>
 </body>
 </html>

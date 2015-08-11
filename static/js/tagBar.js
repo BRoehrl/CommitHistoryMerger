@@ -75,8 +75,6 @@ function refreshQuery(){
       strDate = earliestString + 'T00:00:00Z';
       query = query +  '&since=' + strDate;
     }
-    if(authors.length>0 || repos.length>0 || dates.length>0){
-      query = query.replace('&','?');
-    }
+    query = query.replace('&','?');
     window.location = query;   
 }

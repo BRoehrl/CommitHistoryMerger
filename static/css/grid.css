@@ -58,11 +58,25 @@ body {
   vertical-align: middle;
 }
 
-[class*="col-xsNONONO"] {
+.noColStyle{
+  padding-top: 0px;
+  padding-bottom: 0px;
+  background-color: inherit;
+  border: 0px;
+}
+
+.noColStyle.pull-right{
+  padding-top: 0px;
+  padding-bottom: 0px;
+  text-align: right;
+}
+
+.repoCol {
   padding-top: 5px;
   padding-bottom: 15px;
   background-color: white; 
-  border: 0px solid rgba(0,61,124,.2);
+  border: 2px solid rgba(0,61,124,.2);
+  color: teal;
 }
 
 hr {
@@ -71,7 +85,6 @@ hr {
 }
 
 .comDateText{
-   text-align: left;
    font-size: 12px;
    color: grey;
 }

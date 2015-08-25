@@ -106,7 +106,7 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 	config := getConfigFromForm(r.Form)
 	fmt.Println(config)
-	git.SetConfig(config)
+	processor.SetConfig(config)
 	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE, Settings: git.GetConfig()})
 }
 

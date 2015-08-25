@@ -14,12 +14,13 @@ type Query struct {
 	Since   time.Time
 }
 
-var aBranchChanged bool
+var aBranchChanged, settingsChanged bool
 
 func GetCommits(query Query) (commits Commits) {
 	commits = Commits{}
-	if aBranchChanged {
+	if aBranchChanged || settingsChanged {
 		flushCommitCache()
+		settingsChanged = false
 		aBranchChanged = false
 	}
 	if query.Since.Before(cacheTime) {
@@ -108,4 +109,12 @@ func SetRepoBranch(repoName, branchName string) (err error) {
 		}
 	}
 	return errors.New("Repository found, but not in allRepos: " + repoName)
+}
+
+func SetConfig(config git.Config) {
+	if  git.SetConfig(config) {
+		settingsChanged = true
+	}
+	fmt.Println(settingsChanged)
+	fmt.Println(config)
 }

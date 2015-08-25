@@ -25,7 +25,7 @@ var (
 
 func init() {
 	gitUrl = "https://api.github.com"
-	baseOrganisation = "/informationgrid"
+	baseOrganisation = "informationgrid"
 	gitAuthkey = ""
 	maxRepos = 100
 	maxBranches = 50
@@ -39,25 +39,32 @@ type Config struct {
 	MaxRepos, MaxBranches                           int
 }
 
-func SetConfig(connData Config) {
-	if connData.GitUrl != "" {
+func SetConfig(connData Config) (settingsChanged bool) {
+	if connData.GitUrl != "" && connData.GitUrl != gitUrl {
 		gitUrl = connData.GitUrl
+		settingsChanged = true
 	}
-	if connData.BaseOrganisation != "" {
+	if connData.BaseOrganisation != "" && baseOrganisation != connData.BaseOrganisation {
 		baseOrganisation = connData.BaseOrganisation
+		settingsChanged = true
 	}
-	if strings.Replace(connData.GitAuthkey, "*", "", -1) != "" {
+	if strings.Replace(connData.GitAuthkey, "*", "", -1) != "" && gitAuthkey != connData.GitAuthkey {
 		gitAuthkey = connData.GitAuthkey
+		settingsChanged = true
 	}
-	if connData.SinceTime != "" {
+	if connData.SinceTime != "" && sinceTime != connData.SinceTime {
 		sinceTime = connData.SinceTime
+		settingsChanged = true
 	}
-	if connData.MaxRepos != 0 {
+	if connData.MaxRepos != 0 && maxRepos != connData.MaxRepos {
 		maxRepos = connData.MaxRepos
+		settingsChanged = true
 	}
-	if connData.MaxBranches != 0 {
+	if connData.MaxBranches != 0 && maxBranches != connData.MaxBranches {
 		maxBranches = connData.MaxBranches
+		settingsChanged = true
 	}
+	return settingsChanged
 }
 
 func GetConfig() Config {

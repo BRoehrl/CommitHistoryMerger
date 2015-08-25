@@ -14,12 +14,11 @@ var authFlag string
 var portFlag int
 var host string
 
-
 func init() {
 	flag.StringVar(&authFlag, "auth", "", "Git Basic Authentification key")
 	flag.IntVar(&portFlag, "port", 2506, "Webserver port")
 	flag.StringVar(&host, "host", "127.0.0.1", "Webserver host IP")
-	
+
 }
 
 func main() {

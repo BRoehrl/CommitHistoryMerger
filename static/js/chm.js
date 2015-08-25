@@ -74,3 +74,10 @@ function sendTag(tagType){
 	tagInput.value = "";
 	
 }
+
+$("#settings").submit(function(event){
+	var $form = $(this);
+	 var $inputs = $form.find("input");
+	 var serializedData = $form.serialize();
+	 $.post('/settings', serializedData);
+});

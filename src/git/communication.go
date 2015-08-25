@@ -10,12 +10,15 @@ import (
 )
 
 var (
-	gitUrl             string
-	baseOrganisation   string
-	gitAuthkey         string
-	RateLimit          int
-	RateLimitRemaining int
-	RateLimitReset     int
+	gitUrl,
+	baseOrganisation,
+	gitAuthkey,
+	sinceTime string
+	maxRepos,
+	maxBranches,
+	RateLimit,
+	RateLimitRemaining,
+	RateLimitReset int
 
 	islastPage bool
 )
@@ -24,10 +27,16 @@ func init() {
 	gitUrl = "https://api.github.com"
 	baseOrganisation = "/informationgrid"
 	gitAuthkey = ""
+	maxRepos = 100
+	maxBranches = 50
+
+	twoMonthAgo := time.Now().AddDate(0, -2, 0)
+	sinceTime = twoMonthAgo.Format("2006-01-02")
 }
 
 type Config struct {
-	GitUrl, BaseOrganisation, GitAuthkey string
+	GitUrl, BaseOrganisation, GitAuthkey, SinceTime string
+	MaxRepos, MaxBranches                           int
 }
 
 func SetConfig(connData Config) {
@@ -37,9 +46,22 @@ func SetConfig(connData Config) {
 	if connData.BaseOrganisation != "" {
 		baseOrganisation = connData.BaseOrganisation
 	}
-	if connData.GitAuthkey != "" {
+	if strings.Replace(connData.GitAuthkey, "*", "", -1) != "" {
 		gitAuthkey = connData.GitAuthkey
 	}
+	if connData.SinceTime != "" {
+		sinceTime = connData.SinceTime
+	}
+	if connData.MaxRepos != 0 {
+		maxRepos = connData.MaxRepos
+	}
+	if connData.MaxBranches != 0 {
+		maxBranches = connData.MaxBranches
+	}
+}
+
+func GetConfig() Config {
+	return Config{GitUrl: gitUrl, BaseOrganisation: baseOrganisation, GitAuthkey: "******", SinceTime: sinceTime, MaxRepos: maxRepos, MaxBranches: maxBranches}
 }
 
 func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
@@ -167,7 +189,6 @@ func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JsonCommit, er
 	}
 	return
 }
-
 
 // GetAllCommitsUntil returns all commits commited after Date d
 // Note that for each 100 querries a new request is sent

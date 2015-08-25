@@ -60,6 +60,13 @@ var routes = Routes{
 		SettingsShow,
 	},
 	Route{
+		"SettingsShow",
+		"POST",
+		"/settings",
+		nil,
+		SettingsPost,
+	},
+	Route{
 		"ReposShow",
 		"GET",
 		"/json/repos",
@@ -102,19 +109,5 @@ var routes = Routes{
 		"/json/commits/{sha}",
 		nil,
 		ShowSingleCommit,
-	},
-	Route{
-		"SetConfig",
-		"GET",
-		"/json/setConfig={jsonString:(?s).*}",
-		nil,
-		SetConfig,
-	},
-	Route{
-		"Config",
-		"GET",
-		"/json/config",
-		nil,
-		GetConfig,
 	},
 }

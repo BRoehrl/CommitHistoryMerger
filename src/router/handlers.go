@@ -3,11 +3,13 @@ package router
 import (
 	"encoding/json"
 	"fmt"
+	"git"
 	"git/processor"
 	"html/template"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +20,7 @@ type Page struct {
 	Title      string
 	Buttondata []Buttondata
 	RepoData   []Repodata
+	Settings   git.Config
 }
 type Repodata struct {
 	Name       string
@@ -25,9 +28,9 @@ type Repodata struct {
 	NrBranches int
 }
 type Buttondata struct {
-	Name       string
-	Id         string
-	DateString string
+	Name,
+	Id,
+	DateString,
 	Repository string
 }
 
@@ -91,7 +94,20 @@ func SettingsShow(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE})
+	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE, Settings: git.GetConfig()})
+}
+
+func SettingsPost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html")
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+	}
+
+	config := getConfigFromForm(r.Form)
+	fmt.Println(config)
+	git.SetConfig(config)
+	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE, Settings: git.GetConfig()})
 }
 
 func ReposShowHtml(w http.ResponseWriter, r *http.Request) {
@@ -165,26 +181,9 @@ func CommitShow(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SetConfig(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	jsonString := vars["jsonString"]
-	jsonString = strings.Replace(jsonString, "+", "", -1)
-	fmt.Fprintln(w, jsonString)
-	if err := json.NewDecoder(strings.NewReader(jsonString)).Decode(&[]string{}); err != nil {
-		fmt.Fprintln(w, err)
-		return
-	}
-}
-func GetConfig(w http.ResponseWriter, r *http.Request) {
-	if err := json.NewEncoder(w).Encode("Test"); err != nil {
-		panic(err)
-	}
-}
-
 func getQueryFromVars(vars map[string]string) processor.Query {
 
-	threeMonthAgo := time.Now().AddDate(0, -3, 0)
-	query := processor.Query{Since: threeMonthAgo}
+	query := processor.Query{}
 
 	authors, ok := vars["author"]
 	if ok {
@@ -208,6 +207,22 @@ func getQueryFromVars(vars map[string]string) processor.Query {
 			query.Since = d
 		}
 
+	} else {
+		if d, err := time.Parse("2006-01-02", git.GetConfig().SinceTime); err == nil {
+			query.Since = d
+		}
 	}
 	return query
+}
+
+func getConfigFromForm(form url.Values) git.Config {
+	config := git.Config{}
+	config.GitUrl = form.Get("baseUrl")
+	config.BaseOrganisation = form.Get("baseOrg")
+	config.GitAuthkey = form.Get("authKey")
+	config.SinceTime = form.Get("sinceTime")
+	config.MaxRepos, _ = strconv.Atoi(form.Get("maxRepos"))
+	config.MaxBranches, _ = strconv.Atoi(form.Get("maxBranches"))
+
+	return config
 }

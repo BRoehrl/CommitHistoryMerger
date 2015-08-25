@@ -99,7 +99,7 @@ func SetRepoBranch(repoName, branchName string) (err error) {
 					if repo.SelectedBranch != branch {
 						repo.SelectedBranch = branch
 						aBranchChanged = true
-						allRepos[i] = repo;
+						allRepos[i] = repo
 					}
 					return
 				}

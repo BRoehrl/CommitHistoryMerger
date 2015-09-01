@@ -1,10 +1,14 @@
 package processor
 
 import (
+	"encoding/json"
+	"fmt"
 	"git"
+	"io/ioutil"
+	"log"
+	"os"
 	"sort"
 	"time"
-	"fmt"
 )
 
 type Commit struct {
@@ -82,7 +86,6 @@ func getGitCommits(from, to time.Time) (err error) {
 	return
 }
 
-
 func addCommitsToCache(newCommits Commits) {
 	for _, nc := range newCommits {
 		addSingleCommitToCache(nc, false)
@@ -102,5 +105,67 @@ func addSingleCommitToCache(nc Commit, reSort bool) (commitAdded bool) {
 	if reSort {
 		sort.Sort(cachedCommits)
 	}
+	return
+}
+
+type completeConfig struct {
+	Baseconfig       git.Config
+	SelectedBranches map[string]string
+}
+
+func saveCompleteConfig(fileName string) {
+	baseConfig := git.GetConfig()
+	selectedBranches := make(map[string]string)
+	for _, repo := range allRepos {
+		selectedBranches[repo.Name] = repo.SelectedBranch
+	}
+	saveInJsonFile(completeConfig{baseConfig, selectedBranches}, "configs", fileName)
+}
+
+func loadCompleteConfig(fileName string) (err error) {
+	file, err := os.Open("configs/" + fileName)
+	if err != nil {
+		log.Println("Config-file not found", "configs/"+fileName)
+		return
+	}
+	decoder := json.NewDecoder(file)
+	completeConfig := completeConfig{}
+	err = decoder.Decode(&completeConfig)
+	if err != nil {
+		log.Println("Could not parse Config-file", file.Name())
+	}
+	log.Println("complete config:", completeConfig)
+
+
+	SetConfig(completeConfig.Baseconfig)
+	//reload repositories
+	GetCachedRepoObjects()
+	for repo, branch := range completeConfig.SelectedBranches {
+		SetRepoBranch(repo, branch)
+	}
+	flushCommitCache()
+	return
+}
+
+func saveInJsonFile(i interface{}, dir string, fileName string) (err error){
+	if _, err = os.Stat(dir); err != nil {
+		if os.IsNotExist(err) {
+			os.Mkdir(dir, 0755)
+		} else {
+			log.Println(err)
+			return
+		}
+	}
+
+	path := fmt.Sprint(dir, "/", fileName)
+	os.Remove(path)
+
+	b, err := json.Marshal(i)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	ioutil.WriteFile(path, b, 0644)
 	return
 }

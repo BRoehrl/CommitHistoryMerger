@@ -26,6 +26,10 @@ func GetCommits(query Query) (commits Commits) {
 		}
 		settingsChanged = false
 	}
+	// if no date set use two month ago
+	if query.Since.Equal(time.Time{}) {
+		query.Since = time.Now().AddDate(0, -2, 0)
+	}
 	if query.Since.Before(cacheTime) {
 		err := getGitCommits(query.Since, cacheTime)
 		if err != nil {
@@ -128,7 +132,8 @@ func SetRepoBranch(repoName, branchName string) (err error) {
 }
 
 func SetConfig(config git.Config) {
-	if  git.SetConfig(config) {
+	if git.SetConfig(config) {
 		settingsChanged = true
+		saveCompleteConfig(config.MiscDefaultBranch)
 	}
 }

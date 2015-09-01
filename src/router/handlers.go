@@ -221,6 +221,6 @@ func getConfigFromForm(form url.Values) git.Config {
 	config.SinceTime = form.Get("sinceTime")
 	config.MaxRepos, _ = strconv.Atoi(form.Get("maxRepos"))
 	config.MaxBranches, _ = strconv.Atoi(form.Get("maxBranches"))
-
+	
 	return config
 }

@@ -4,6 +4,7 @@ import (
 	"git"
 	"sort"
 	"time"
+	"fmt"
 )
 
 type Commit struct {
@@ -52,7 +53,7 @@ func flushRepos() {
 	cachedRepos = make(map[string]bool)
 }
 
-func GetGitCommits(from, to time.Time) (err error) {
+func getGitCommits(from, to time.Time) (err error) {
 	if len(cachedRepos) == 0 {
 		allRepos, err = git.GetRepositories()
 	}
@@ -81,18 +82,6 @@ func GetGitCommits(from, to time.Time) (err error) {
 	return
 }
 
-func GetSingleCommit(sha string) (singleCommit Commit) {
-	if !cachedShas[sha] {
-		return
-	}
-	for _, com := range cachedCommits {
-		if com.Sha == sha {
-			singleCommit = com
-			return
-		}
-	}
-	return
-}
 
 func addCommitsToCache(newCommits Commits) {
 	for _, nc := range newCommits {

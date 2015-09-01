@@ -27,7 +27,7 @@ func GetCommits(query Query) (commits Commits) {
 		settingsChanged = false
 	}
 	if query.Since.Before(cacheTime) {
-		err := GetGitCommits(query.Since, cacheTime)
+		err := getGitCommits(query.Since, cacheTime)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -63,6 +63,19 @@ func GetCommits(query Query) (commits Commits) {
 
 		if keep {
 			commits = append(commits, commit)
+		}
+	}
+	return
+}
+
+func GetSingleCommit(sha string) (singleCommit Commit) {
+	if !cachedShas[sha] {
+		return
+	}
+	for _, com := range cachedCommits {
+		if com.Sha == sha {
+			singleCommit = com
+			return
 		}
 	}
 	return

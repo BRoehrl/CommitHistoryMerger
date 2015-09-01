@@ -7,16 +7,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"fmt"
 )
 
 var (
-	gitUrl,
-	baseOrganisation,
-	gitAuthkey,
-	sinceTime string
-	maxRepos,
-	maxBranches,
 	RateLimit,
 	RateLimitRemaining,
 	RateLimitReset int
@@ -24,53 +17,7 @@ var (
 	islastPage bool
 )
 
-func init() {
-	gitUrl = "https://api.github.com"
-	baseOrganisation = "informationgrid"
-	gitAuthkey = ""
-	maxRepos = 100
-	maxBranches = 100
 
-	twoMonthAgo := time.Now().AddDate(0, -2, 0)
-	sinceTime = twoMonthAgo.Format("2006-01-02")
-}
-
-type Config struct {
-	GitUrl, BaseOrganisation, GitAuthkey, SinceTime string
-	MaxRepos, MaxBranches                           int
-}
-
-func SetConfig(connData Config) (settingsChanged bool) {
-	if connData.GitUrl != "" && connData.GitUrl != gitUrl {
-		gitUrl = connData.GitUrl
-		settingsChanged = true
-	}
-	if connData.BaseOrganisation != "" && baseOrganisation != connData.BaseOrganisation {
-		baseOrganisation = connData.BaseOrganisation
-		settingsChanged = true
-	}
-	if strings.Replace(connData.GitAuthkey, "*", "", -1) != "" && gitAuthkey != connData.GitAuthkey {
-		gitAuthkey = connData.GitAuthkey
-		settingsChanged = true
-	}
-	if connData.SinceTime != "" && sinceTime != connData.SinceTime {
-		sinceTime = connData.SinceTime
-		settingsChanged = true
-	}
-	if connData.MaxRepos != 0 && maxRepos != connData.MaxRepos {
-		maxRepos = connData.MaxRepos
-		settingsChanged = true
-	}
-	if connData.MaxBranches != 0 && maxBranches != connData.MaxBranches {
-		maxBranches = connData.MaxBranches
-		settingsChanged = true
-	}
-	return settingsChanged
-}
-
-func GetConfig() Config {
-	return Config{GitUrl: gitUrl, BaseOrganisation: baseOrganisation, GitAuthkey: "******", SinceTime: sinceTime, MaxRepos: maxRepos, MaxBranches: maxBranches}
-}
 
 func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 	client := &http.Client{}
@@ -101,7 +48,7 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 }
 
 func UnmarshalFromGetResponse(url string, i interface{}) (err error) {
-	resp, err := getResponse(url, gitAuthkey)
+	resp, err := getResponse(url, config.GitAuthkey)
 	if err != nil {
 		return
 	}
@@ -117,10 +64,9 @@ func UnmarshalFromGetResponse(url string, i interface{}) (err error) {
 // GetRepositories returns all or the first 100 repositories of the baseOrganisation.
 func GetRepositories() (allRepos Repos, err error) {
 	currentPage := 1
-	highestPageNumber := (maxRepos-1)/100 + 1
-	fmt.Println("Repo:", highestPageNumber)
-	for currentPage <=  highestPageNumber{
-		repoQuery := gitUrl + "/orgs/" + baseOrganisation + "/repos?per_page=100&page=" + strconv.Itoa(currentPage)
+	highestPageNumber := (config.MaxRepos-1)/100 + 1
+	for currentPage <= highestPageNumber {
+		repoQuery := config.GitUrl + "/orgs/" + config.BaseOrganisation + "/repos?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var reposPage Repos
 		err = UnmarshalFromGetResponse(repoQuery, &reposPage)
@@ -150,10 +96,10 @@ func AddBranchesToRepos(allRepos Repos) (reposWithBranches Repos, err error) {
 
 func addBranchesToSingleRepo(repo Repo) (r Repo, err error) {
 	currentPage := 1
-	highestPageNumber := (maxBranches-1)/100 + 1
+	highestPageNumber := (config.MaxBranches-1)/100 + 1
 	branches := []Branch{}
-	for currentPage <=  highestPageNumber{
-		branchQuery := gitUrl + "/repos/" + baseOrganisation + "/" + repo.Name + "/branches?per_page=100&page=" + strconv.Itoa(currentPage)
+	for currentPage <= highestPageNumber {
+		branchQuery := config.GitUrl + "/repos/" + config.BaseOrganisation + "/" + repo.Name + "/branches?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var branchesPage []Branch
 		err = UnmarshalFromGetResponse(branchQuery, &branchesPage)
@@ -170,13 +116,16 @@ func addBranchesToSingleRepo(repo Repo) (r Repo, err error) {
 		branchMap[b.Name] = b.Commit.Sha
 	}
 	repo.SelectedBranch = repo.DefaultBranch
+	if branchMap[config.MiscDefaultBranch] != "" {
+		repo.SelectedBranch = config.MiscDefaultBranch
+	}
 	repo.Branches = branchMap
 	return repo, err
 }
 
 // GetCommits returns the 100 newest commits for the specified repository
 func (r Repo) GetCommits() (commits []JsonCommit, err error) {
-	query := gitUrl + "/repos/" + baseOrganisation + "/" + r.Name + "/commits?per_page=100"
+	query := config.GitUrl + "/repos/" + config.BaseOrganisation + "/" + r.Name + "/commits?per_page=100"
 	err = UnmarshalFromGetResponse(query, &commits)
 	return
 }
@@ -186,7 +135,7 @@ func (r Repo) GetCommits() (commits []JsonCommit, err error) {
 func (r Repo) GetFirstNCommits(n int) (commits []JsonCommit, err error) {
 	currentPage := 1
 	for {
-		query := gitUrl + "/repos/" + baseOrganisation + "/" + r.Name + "/commits?per_page=100&page=" + strconv.Itoa(currentPage)
+		query := config.GitUrl + "/repos/" + config.BaseOrganisation + "/" + r.Name + "/commits?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var singlePage []JsonCommit
 		err = UnmarshalFromGetResponse(query, &singlePage)
@@ -209,7 +158,7 @@ func (r Repo) GetFirstNCommits(n int) (commits []JsonCommit, err error) {
 func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JsonCommit, err error) {
 	currentPage := 1
 	for {
-		query := gitUrl + "/repos/" + baseOrganisation
+		query := config.GitUrl + "/repos/" + config.BaseOrganisation
 		query += "/" + r.Name
 		query += "/commits?since=" + from.Format(time.RFC3339) + "&until=" + to.Format(time.RFC3339)
 		query += "&sha=" + r.Branches[r.SelectedBranch]

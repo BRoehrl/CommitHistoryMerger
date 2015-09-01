@@ -217,6 +217,7 @@ func getConfigFromForm(form url.Values) git.Config {
 	config.GitUrl = form.Get("baseUrl")
 	config.BaseOrganisation = form.Get("baseOrg")
 	config.GitAuthkey = form.Get("authKey")
+	config.MiscDefaultBranch = form.Get("defaultBranch")
 	config.SinceTime = form.Get("sinceTime")
 	config.MaxRepos, _ = strconv.Atoi(form.Get("maxRepos"))
 	config.MaxBranches, _ = strconv.Atoi(form.Get("maxBranches"))

@@ -26,6 +26,12 @@ function openDialog(filterBy) {
 			case 'Date':
 				var dialog = document.getElementById('dialogDate')
 				break;
+			case 'Save':
+				var dialog = document.getElementById('dialogSave')
+				break;
+			case 'Load':
+				var dialog = document.getElementById('dialogLoad')
+				break;	
 			default:
 				return;
 		}
@@ -42,6 +48,12 @@ function closeDialog(filterBy) {
 				break;
 			case 'Date':
 				var dialog = document.getElementById('dialogDate')
+				break;
+			case 'Save':
+				var dialog = document.getElementById('dialogSave')
+				break;
+			case 'Load':
+				var dialog = document.getElementById('dialogLoad')
 				break;
 			default:
 				return;

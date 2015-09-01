@@ -122,6 +122,15 @@ func saveCompleteConfig(fileName string) {
 	saveInJsonFile(completeConfig{baseConfig, selectedBranches}, "configs", fileName)
 }
 
+func getSavedConfigs() (fileNames []string, err error) {
+	file, err := os.Open("configs/")
+	if err != nil {
+		log.Println("Config-folder not found", "configs/")
+		return
+	}
+	return file.Readdirnames(0)
+}
+
 func loadCompleteConfig(fileName string) (err error) {
 	file, err := os.Open("configs/" + fileName)
 	if err != nil {

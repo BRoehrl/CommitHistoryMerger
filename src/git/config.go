@@ -30,7 +30,6 @@ func GetConfig() Config {
 	return config
 }
 
-
 func SetConfig(connData Config) (updateAll, miscBranchChanged bool) {
 	if connData.GitUrl != "" && connData.GitUrl != config.GitUrl {
 		config.GitUrl = connData.GitUrl
@@ -63,4 +62,3 @@ func SetConfig(connData Config) (updateAll, miscBranchChanged bool) {
 	}
 	return
 }
-

@@ -136,7 +136,6 @@ func loadCompleteConfig(fileName string) (err error) {
 	}
 	log.Println("complete config:", completeConfig)
 
-
 	SetConfig(completeConfig.Baseconfig)
 	//reload repositories
 	GetCachedRepoObjects()
@@ -147,7 +146,7 @@ func loadCompleteConfig(fileName string) (err error) {
 	return
 }
 
-func saveInJsonFile(i interface{}, dir string, fileName string) (err error){
+func saveInJsonFile(i interface{}, dir string, fileName string) (err error) {
 	if _, err = os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			os.Mkdir(dir, 0755)

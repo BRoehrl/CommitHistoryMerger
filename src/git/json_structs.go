@@ -53,8 +53,6 @@ type Branch struct {
 
 type SortableCommits []JsonCommit
 
-//type SortableCommits []Commit
-
 func (sc SortableCommits) Len() int {
 	return len(sc)
 }

@@ -17,8 +17,6 @@ var (
 	islastPage bool
 )
 
-
-
 func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)

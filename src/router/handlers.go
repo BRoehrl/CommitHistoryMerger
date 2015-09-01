@@ -43,8 +43,6 @@ var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 
-	//	threeMonthAgo := time.Now().AddDate(0, -3, 0)
-	//	query := processor.Query{Since: threeMonthAgo}
 	vars := mux.Vars(r)
 
 	query := getQueryFromVars(vars)
@@ -105,7 +103,6 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	config := getConfigFromForm(r.Form)
-	fmt.Println(config)
 	processor.SetConfig(config)
 	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE, Settings: git.GetConfig()})
 }

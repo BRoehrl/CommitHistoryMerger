@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"fmt"
 )
 
 var (
@@ -28,7 +29,7 @@ func init() {
 	baseOrganisation = "informationgrid"
 	gitAuthkey = ""
 	maxRepos = 100
-	maxBranches = 50
+	maxBranches = 100
 
 	twoMonthAgo := time.Now().AddDate(0, -2, 0)
 	sinceTime = twoMonthAgo.Format("2006-01-02")
@@ -115,10 +116,22 @@ func UnmarshalFromGetResponse(url string, i interface{}) (err error) {
 
 // GetRepositories returns all or the first 100 repositories of the baseOrganisation.
 func GetRepositories() (allRepos Repos, err error) {
-	repoQuery := gitUrl + "/orgs/" + baseOrganisation + "/repos?per_page=100"
-	err = UnmarshalFromGetResponse(repoQuery, &allRepos)
-	if err != nil {
-		return
+	currentPage := 1
+	highestPageNumber := (maxRepos-1)/100 + 1
+	fmt.Println("Repo:", highestPageNumber)
+	for currentPage <=  highestPageNumber{
+		repoQuery := gitUrl + "/orgs/" + baseOrganisation + "/repos?per_page=100&page=" + strconv.Itoa(currentPage)
+		currentPage++
+		var reposPage Repos
+		err = UnmarshalFromGetResponse(repoQuery, &reposPage)
+		if err != nil {
+			return
+		}
+		allRepos = append(allRepos, reposPage...)
+
+		if islastPage {
+			break
+		}
 	}
 	allRepos, err = AddBranchesToRepos(allRepos)
 	return
@@ -126,21 +139,39 @@ func GetRepositories() (allRepos Repos, err error) {
 
 func AddBranchesToRepos(allRepos Repos) (reposWithBranches Repos, err error) {
 	for _, repo := range allRepos {
-		branchQuery := gitUrl + "/repos/" + baseOrganisation + "/" + repo.Name + "/branches?per_page=100"
-		branches := []Branch{}
-		err = UnmarshalFromGetResponse(branchQuery, &branches)
+		repo, err = addBranchesToSingleRepo(repo)
 		if err != nil {
 			return
 		}
-		branchMap := make(map[string]string)
-		for _, b := range branches {
-			branchMap[b.Name] = b.Commit.Sha
-		}
-		repo.SelectedBranch = repo.DefaultBranch
-		repo.Branches = branchMap
 		reposWithBranches = append(reposWithBranches, repo)
 	}
 	return
+}
+
+func addBranchesToSingleRepo(repo Repo) (r Repo, err error) {
+	currentPage := 1
+	highestPageNumber := (maxBranches-1)/100 + 1
+	branches := []Branch{}
+	for currentPage <=  highestPageNumber{
+		branchQuery := gitUrl + "/repos/" + baseOrganisation + "/" + repo.Name + "/branches?per_page=100&page=" + strconv.Itoa(currentPage)
+		currentPage++
+		var branchesPage []Branch
+		err = UnmarshalFromGetResponse(branchQuery, &branchesPage)
+		branches = append(branches, branchesPage...)
+		if err != nil {
+			return repo, err
+		}
+		if islastPage {
+			break
+		}
+	}
+	branchMap := make(map[string]string)
+	for _, b := range branches {
+		branchMap[b.Name] = b.Commit.Sha
+	}
+	repo.SelectedBranch = repo.DefaultBranch
+	repo.Branches = branchMap
+	return repo, err
 }
 
 // GetCommits returns the 100 newest commits for the specified repository

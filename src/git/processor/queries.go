@@ -20,8 +20,11 @@ func GetCommits(query Query) (commits Commits) {
 	commits = Commits{}
 	if aBranchChanged || settingsChanged {
 		flushCommitCache()
-		settingsChanged = false
 		aBranchChanged = false
+		if settingsChanged {
+			flushRepos()
+		}
+		settingsChanged = false
 	}
 	if query.Since.Before(cacheTime) {
 		err := GetGitCommits(query.Since, cacheTime)
@@ -115,6 +118,4 @@ func SetConfig(config git.Config) {
 	if  git.SetConfig(config) {
 		settingsChanged = true
 	}
-	fmt.Println(settingsChanged)
-	fmt.Println(config)
 }

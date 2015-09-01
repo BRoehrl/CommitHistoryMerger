@@ -47,6 +47,11 @@ func flushCommitCache() {
 	cacheTime = time.Now()
 }
 
+func flushRepos() {
+	allRepos = git.Repos{}
+	cachedRepos = make(map[string]bool)
+}
+
 func GetGitCommits(from, to time.Time) (err error) {
 	if len(cachedRepos) == 0 {
 		allRepos, err = git.GetRepositories()

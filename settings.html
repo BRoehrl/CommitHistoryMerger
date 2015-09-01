@@ -5,9 +5,9 @@
 			<div class="container">
 				<h2 class="row" style="">Base Settings</h2>
 
-				<h4 class="row">Auth Key<input type="text" placeholder="key" class="form-control" contenteditable="false" id="authKey" name="authKey" style="" value="{{.Settings.GitAuthkey}}"></h4>
+				<h4 class="row">Auth Key<input type="text" placeholder="key" class="form-control" id="authKey" name="authKey" value="{{.Settings.GitAuthkey}}"></h4>
 
-				<h4 class="row">Git Base Organisation<input type="text" placeholder="infromationgrid" class="form-control" contenteditable="false" id="baseOrg" name="baseOrg" style="" value="{{.Settings.BaseOrganisation}}"></h4>
+				<h4 class="row">Git Base Organisation<input type="text" class="form-control" id="baseOrg" name="baseOrg" value="{{.Settings.BaseOrganisation}}"></h4>
 
 				<h4 class="row">Git Api URL<input type="url" placeholder="https://api.github.com" class="form-control" id="baseUrl" name="baseUrl" value="{{.Settings.GitUrl}}"></h4>
 
@@ -18,9 +18,9 @@
 
 				<h4 class="row">Default 'Since' filter<input type="date" class="form-control" id="sinceTime" name="sinceTime" value="{{.Settings.SinceTime}}"></h4>
 
-				<h4 class="row">Max number of Branches<input type="number" placeholder="50" class="form-control" id="maxBranches" name="maxBranches" value="{{.Settings.MaxBranches}}"></h4>
+				<h4 class="row">Max number of Branches<input type="number" min="100" step="100" class="form-control" id="maxBranches" name="maxBranches" value="{{.Settings.MaxBranches}}"></h4>
 
-				<h4 class="row">Max number of Repositories<input type="number" placeholder="100" class="form-control" id="maxRepos" name="maxRepos" value="{{.Settings.MaxRepos}}"></h4>
+				<h4 class="row">Max number of Repositories<input type="number" min="100" step="100" class="form-control" id="maxRepos" name="maxRepos" value="{{.Settings.MaxRepos}}"></h4>
 				<div class="clearfix">
 				<p class="pull-right fixSave">
 					<button type="submit" class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>

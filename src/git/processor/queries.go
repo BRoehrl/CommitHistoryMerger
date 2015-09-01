@@ -14,17 +14,17 @@ type Query struct {
 	Since   time.Time
 }
 
-var aBranchChanged, settingsChanged bool
+var updateCommits, updateAll bool
 
 func GetCommits(query Query) (commits Commits) {
 	commits = Commits{}
-	if aBranchChanged || settingsChanged {
+	if updateCommits || updateAll {
 		flushCommitCache()
-		aBranchChanged = false
-		if settingsChanged {
+		updateCommits = false
+		if updateAll {
 			flushRepos()
 		}
-		settingsChanged = false
+		updateAll = false
 	}
 	// if no date set use two month ago
 	if query.Since.Equal(time.Time{}) {
@@ -119,7 +119,7 @@ func SetRepoBranch(repoName, branchName string) (err error) {
 				if branch == branchName {
 					if repo.SelectedBranch != branch {
 						repo.SelectedBranch = branch
-						aBranchChanged = true
+						updateCommits = true
 						allRepos[i] = repo
 					}
 					return
@@ -131,9 +131,22 @@ func SetRepoBranch(repoName, branchName string) (err error) {
 	return errors.New("Repository found, but not in allRepos: " + repoName)
 }
 
+func UpdateDefaultBranch() {
+	defaultBranch := git.GetConfig().MiscDefaultBranch
+	for i, repo := range allRepos {
+		if repo.Branches[defaultBranch] != "" {
+			repo.SelectedBranch = defaultBranch
+			allRepos[i] = repo
+		}
+	}
+}
+
 func SetConfig(config git.Config) {
-	if git.SetConfig(config) {
-		settingsChanged = true
+	completeUpdate, miscBranchChanged := git.SetConfig(config)
+	updateAll = completeUpdate
+	if miscBranchChanged {
+		UpdateDefaultBranch()
+		updateCommits = true
 		saveCompleteConfig(config.MiscDefaultBranch)
 	}
 }

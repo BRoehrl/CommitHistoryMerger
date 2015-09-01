@@ -31,35 +31,36 @@ func GetConfig() Config {
 }
 
 
-func SetConfig(connData Config) (settingsChanged bool) {
+func SetConfig(connData Config) (updateAll, miscBranchChanged bool) {
 	if connData.GitUrl != "" && connData.GitUrl != config.GitUrl {
 		config.GitUrl = connData.GitUrl
-		settingsChanged = true
+		updateAll = true
 	}
 	if connData.BaseOrganisation != "" && config.BaseOrganisation != connData.BaseOrganisation {
 		config.BaseOrganisation = connData.BaseOrganisation
-		settingsChanged = true
+		updateAll = true
 	}
 	if strings.Replace(connData.GitAuthkey, "*", "", -1) != "" && config.GitAuthkey != connData.GitAuthkey {
 		config.GitAuthkey = connData.GitAuthkey
-		settingsChanged = true
+		updateAll = true
 	}
 	if connData.SinceTime != "" && config.SinceTime != connData.SinceTime {
 		config.SinceTime = connData.SinceTime
-		settingsChanged = true
+		updateAll = false
 	}
 	if connData.MaxRepos != 0 && config.MaxRepos != connData.MaxRepos {
 		config.MaxRepos = connData.MaxRepos
-		settingsChanged = true
+		updateAll = true
 	}
 	if connData.MaxBranches != 0 && config.MaxBranches != connData.MaxBranches {
 		config.MaxBranches = connData.MaxBranches
-		settingsChanged = true
+		updateAll = true
 	}
 	if connData.MiscDefaultBranch != "" && config.MiscDefaultBranch != connData.MiscDefaultBranch {
 		config.MiscDefaultBranch = connData.MiscDefaultBranch
-		settingsChanged = true
+		updateAll = false
+		miscBranchChanged = true
 	}
-	return settingsChanged
+	return
 }
 

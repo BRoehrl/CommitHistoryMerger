@@ -113,7 +113,7 @@ type completeConfig struct {
 	SelectedBranches map[string]string
 }
 
-func saveCompleteConfig(fileName string) {
+func SaveCompleteConfig(fileName string) {
 	baseConfig := git.GetConfig()
 	selectedBranches := make(map[string]string)
 	for _, repo := range allRepos {
@@ -131,7 +131,7 @@ func getSavedConfigs() (fileNames []string, err error) {
 	return file.Readdirnames(0)
 }
 
-func loadCompleteConfig(fileName string) (err error) {
+func LoadCompleteConfig(fileName string) (err error) {
 	file, err := os.Open("configs/" + fileName)
 	if err != nil {
 		log.Println("Config-file not found", "configs/"+fileName)
@@ -143,7 +143,6 @@ func loadCompleteConfig(fileName string) (err error) {
 	if err != nil {
 		log.Println("Could not parse Config-file", file.Name())
 	}
-	log.Println("complete config:", completeConfig)
 
 	SetConfig(completeConfig.Baseconfig)
 	//reload repositories

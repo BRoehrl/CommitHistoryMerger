@@ -1,7 +1,3 @@
-function detailView() {
-	document.getElementById("message").innerHTML = "Comment changed2.";
-}
-
 function getCommit(id) {
 	$.getJSON('/json/commits/'+id, function(data){
 		document.getElementById("message").innerHTML = data.Comment;
@@ -87,9 +83,34 @@ function sendTag(tagType){
 	
 }
 
-$("#settings").submit(function(event){
-	var $form = $(this);
-	 var $inputs = $form.find("input");
-	 var serializedData = $form.serialize();
-	 $.post('/settings', serializedData);
+function saveProfile(){
+	var nameInput = document.getElementById('profileName')
+	$.post('/config/save/'+ nameInput.value);
+	closeDialog("Save")
+	return false
+}
+
+function loadProfile(){
+	var selected = document.getElementById('selectedProfile')
+	$.get('/config/load/'+ selected.value);
+	closeDialog("Load")
+	window.location.href = '/settings'
+}
+
+$("#settings :input").change(function() {
+	$("#saveButton").toggle()
+	$("#profileMenu").toggle()
+	$("#settings").data("changed",true);
 });
+
+function saveSettings(){
+	if ($("#settings").data("changed")) {
+		var $form = $("#settings");
+		var $inputs = $("#settings").find("input");
+		var serializedData = $form.serialize();
+		$.post('/settings', serializedData);
+	}
+	$("#saveButton").toggle()
+	$("#profileMenu").toggle()	
+}
+

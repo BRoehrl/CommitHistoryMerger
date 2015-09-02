@@ -21,6 +21,7 @@ type Page struct {
 	Buttondata []Buttondata
 	RepoData   []Repodata
 	Settings   git.Config
+	Profiles   []string
 }
 type Repodata struct {
 	Name       string
@@ -54,7 +55,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		formatedDate := com.Time.Format(time.RFC822)[:10]
 		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch})
 	}
-	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: commitData}) //Page{Title: "Home"})
+	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Profiles: processor.GetSavedConfigs(), Buttondata: commitData}) //Page{Title: "Home"})
 }
 
 func shutdownCHM(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +84,7 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	for _, author := range processor.GetCachedAuthors() {
 		authorButtons = append(authorButtons, Buttondata{author, author, "", ""})
 	}
-	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Buttondata: authorButtons})
+	templates.ExecuteTemplate(w, "commits.html", Page{Title: TITLE, Profiles: processor.GetSavedConfigs(), Buttondata: authorButtons})
 }
 
 func SettingsShow(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +93,7 @@ func SettingsShow(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE, Settings: git.GetConfig()})
+	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE, Profiles: processor.GetSavedConfigs(), Settings: git.GetConfig()})
 }
 
 func SettingsPost(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +105,25 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 	config := getConfigFromForm(r.Form)
 	processor.SetConfig(config)
-	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE, Settings: git.GetConfig()})
+	templates.ExecuteTemplate(w, "settings.html", Page{Title: TITLE, Profiles: processor.GetSavedConfigs(), Settings: git.GetConfig()})
+}
+
+func SaveProfile(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+	}
+	vars := mux.Vars(r)
+	processor.SaveCompleteConfig(vars["name"])
+}
+
+func LoadProfile(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+	}
+	vars := mux.Vars(r)
+	processor.LoadCompleteConfig(vars["name"])
 }
 
 func ReposShowHtml(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +147,7 @@ func ReposShowHtml(w http.ResponseWriter, r *http.Request) {
 		repodata = append(repodata, Repodata{repo.Name, branches, len(branches)})
 
 	}
-	templates.ExecuteTemplate(w, "repositories.html", Page{Title: TITLE, RepoData: repodata})
+	templates.ExecuteTemplate(w, "repositories.html", Page{Title: TITLE, Profiles: processor.GetSavedConfigs(), RepoData: repodata})
 }
 func RepoBranchChange(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

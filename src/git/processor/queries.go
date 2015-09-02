@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"git"
+	"log"
 	"sort"
 	"time"
 )
@@ -147,6 +148,13 @@ func SetConfig(config git.Config) {
 	if miscBranchChanged {
 		UpdateDefaultBranch()
 		updateCommits = true
-		saveCompleteConfig(config.MiscDefaultBranch)
 	}
+}
+
+func GetSavedConfigs() (fileNames []string) {
+	fileNames, err := getSavedConfigs()
+	if err != nil {
+		log.Println(err)
+	}
+	return
 }

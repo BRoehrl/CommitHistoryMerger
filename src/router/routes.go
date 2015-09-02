@@ -67,6 +67,20 @@ var routes = Routes{
 		SettingsPost,
 	},
 	Route{
+		"ProfileSave",
+		"POST",
+		"/config/save/{name}",
+		nil,
+		SaveProfile,
+	},
+	Route{
+		"ProfileLoad",
+		"GET",
+		"/config/load/{name}",
+		nil,
+		LoadProfile,
+	},
+	Route{
 		"ReposShow",
 		"GET",
 		"/json/repos",

@@ -35,6 +35,7 @@
           <span class="icon-bar"></span>
 		  <span class="icon-bar"></span>
         </button>
+        <button id="saveButton" onclick="saveSettings()" class="navbar-toggle btn btn-primary" style="display: none;"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
         <a class="navbar-brand" href="/">{{.Title}}</a>
       </div>
       <div>
@@ -46,7 +47,8 @@
 			<li><a href="/settings"><span class="glyphicon glyphicon-cog"></span> Settings</a></li> 
           </ul>
 		  <ul class="nav navbar-nav navbar-right">
-            <li class="dropdown">
+		    
+            <li id="profileMenu" class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true">Profile <span class="caret"></span></a>
               <ul class="dropdown-menu">
                 <li><a onclick="openDialog('Save')" href="javascript:void(0);">Save</a></li>
@@ -63,18 +65,15 @@
 			<button onclick="closeDialog('Save')">Cancel</button>
 	    </dialog>
 		<dialog id="dialogLoad">
-			<form action="javascript:LoadProfile()">
+			<form action="javascript:loadProfile()">
 				<div class="form-group">
 				  <label for="profileName">Please select a Profile:</label>
-				  <select class="form-control" id="profileName">
-					<option>1</option>
-					<option>2</option>
-					<option>3</option>
-					<option>4</option>
+				  <select class="form-control" id="selectedProfile">
+					{{range .Profiles}}<option value="{{.}}">{{.}}</option>{{end}}
 				  </select>
 				</div>
 			</form>  
-			<button onclick="LoadProfile()">Load</button>
+			<button onclick="loadProfile()">Load</button>
 			<button onclick="closeDialog('Load')">Cancel</button>
 	    </dialog>
       </div>

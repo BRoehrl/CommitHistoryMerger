@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -70,14 +69,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	page.Buttondata = commitData
 	updatePageData()
 	templates.ExecuteTemplate(w, "commits.html", page)
-}
-
-func shutdownCHM(w http.ResponseWriter, r *http.Request) {
-	defer os.Exit(0)
-}
-
-func Log(w http.ResponseWriter, r *http.Request) {
-	w.Write(LogBuffer.Bytes())
 }
 
 func AuthorsShowJSON(w http.ResponseWriter, r *http.Request) {

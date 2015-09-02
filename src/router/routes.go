@@ -16,20 +16,6 @@ type Routes []Route
 
 var routes = Routes{
 	Route{
-		"shutdownCHM",
-		"GET",
-		"/shutdown",
-		nil,
-		shutdownCHM,
-	},
-	Route{
-		"log",
-		"GET",
-		"/log",
-		nil,
-		Log,
-	},
-	Route{
 		"Index",
 		"GET",
 		"/",

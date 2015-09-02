@@ -13,7 +13,7 @@
 							<li><a onclick="openDialog('Date')" href="javascript:void(0);">Date</a></li>
 						</ul>
 					</div>
-					<input type="text" id="tagBar" value="Amsterdam" data-role="tagsinput"/>
+					<input type="text" id="tagBar" data-role="tagsinput"/>
 				</div>
 			</div>
 		</div>
@@ -71,14 +71,22 @@
 	</div>
 	<dialog id="dialogAuthor">
 		<form action="javascript:sendTag('Author')">
-			<label for="authorTag">Please enter Author name</label><input id="authorTag">
+			<label for="authorTag">Please enter Author name</label>
+			<input id=authorTag type=text list=authors >
+			<datalist id=authors >
+			   {{range .Authors}}<option value="{{.}}">{{.}}{{end}}
+			</datalist>			
 		</form>  
 		<button onclick="sendTag('Author')">Add Tag</button>
 		<button onclick="closeDialog('Author')">Cancel</button>
 	</dialog>
 	<dialog id="dialogRepo">
 		<form action="javascript:sendTag('Repository')">
-			<label for="repoTag">Please enter Repository name: </label><input id="repoTag">
+			<label for="repoTag">Please enter Repository name: </label>
+			<input id=repoTag type=text list=repos >
+			<datalist id=repos >
+			   {{range .Repos}}<option value="{{.}}">{{.}}{{end}}
+			</datalist>	
 		</form>  
 		<button onclick="sendTag('Repository')">Add Tag</button>
 		<button onclick="closeDialog('Repository')">Cancel</button>

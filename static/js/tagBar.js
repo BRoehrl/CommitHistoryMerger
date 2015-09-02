@@ -8,6 +8,7 @@ window.onload = function() {
       $(tagBar).tagsinput('add', tagArray[i])
     }
     isLoading = false
+    refreshQuery()
 }
 
 $(tagBar).on('beforeItemAdd', function(event) {
@@ -56,7 +57,7 @@ function refreshQuery(){
 
     var query = '/'
     if(authors.length>0){
-      query = '&author=' + authors.join(';');
+      query = query + '&author=' + authors.join(';');
     }
     if(repos.length>0){
       query = query +  '&repo=' + repos.join(';');
@@ -76,5 +77,7 @@ function refreshQuery(){
       query = query +  '&since=' + strDate;
     }
     query = query.replace('&','?');
-    window.location = query;   
+    var oldPath = window.location.href.substring(window.location.href.lastIndexOf("/"));
+    if (oldPath != encodeURI(query)) window.location = query; 
+    console.log(oldPath+" : " +encodeURI(query)) 
 }

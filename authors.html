@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+	{{template "headAndNavbar.html" .}}
+	<div class="section">
+		<div class="container-fluid">
+			<div class="row filterrow">
+			</div>
+		</div>
+	</div>
+	<div class="section">
+		<div class="container-fluid">
+			<div class="row">
+				<div data-spy="scroll" data-target="#details" data-offset="12">
+					<div class="col-md-6 col-xs-6 list">
+						{{range .Authors}}<button class="btn btn-lg btn-block btn-default">
+							<div class="comCommentText">
+								<label>  {{.}}</label>
+							</div>
+							<div class="row comDateText">
+								<div class="col-xs-6 noColStyle pull-left">
+								<text></text>
+								</div>
+								<div class="col-xs-6 noColStyle pull-right hidden-xs">
+								<text></text>
+								</div>
+							</div>
+						</button>{{end}}          
+					</div>
+				</div>
+				<div class="col-md-6 col-xs-6 detail">
+					
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<script src="/static/js/chm.js"></script>
+</body>
+</html>

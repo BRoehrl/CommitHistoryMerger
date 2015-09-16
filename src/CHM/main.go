@@ -27,6 +27,7 @@ func main() {
 	connConf = git.Config{
 		GitUrl:           "https://api.github.com",
 		BaseOrganisation: "informationgrid",
+		MiscDefaultBranch: "develop",
 		GitAuthkey:       ""}
 
 	if authFlag != "" {

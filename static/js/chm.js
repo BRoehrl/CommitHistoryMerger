@@ -1,5 +1,5 @@
 function getCommit(id) {
-	$.getJSON('/json/commits/'+id, function(data){
+	$.getJSON('./json/commits/'+id, function(data){
 		document.getElementById("message").innerHTML = data.Comment;
 		document.getElementById("author").innerHTML = data.Author;
 		document.getElementById("sha").innerHTML = data.Sha;
@@ -8,7 +8,7 @@ function getCommit(id) {
 		document.getElementById("link").href = data.Link;
 		document.getElementById("link").innerHTML = '../commit/'+data.Sha;
 	});
-	
+
 }
 
 function openDialog(filterBy) {
@@ -27,7 +27,7 @@ function openDialog(filterBy) {
 				break;
 			case 'Load':
 				var dialog = document.getElementById('dialogLoad')
-				break;	
+				break;
 			default:
 				return;
 		}
@@ -59,11 +59,11 @@ function closeDialog(filterBy) {
 
 function sendTag(tagType){
 	closeDialog(tagType)
-	
+
 	var tagBar = document.getElementById('tagBar');
-	
+
 	switch(tagType) {
-			
+
 			case 'Author':
 				var tagInput = document.getElementById('authorTag')
 				if (tagInput != "") $(tagBar).tagsinput('add', 'Author:' + tagInput.value)
@@ -80,21 +80,21 @@ function sendTag(tagType){
 				return;
 		}
 	tagInput.value = "";
-	
+
 }
 
 function saveProfile(){
 	var nameInput = document.getElementById('profileName')
-	$.post('/config/save/'+ nameInput.value);
+	$.post('./config/save/'+ nameInput.value);
 	closeDialog("Save")
 	return false
 }
 
 function loadProfile(){
 	var selected = document.getElementById('selectedProfile')
-	$.get('/config/load/'+ selected.value);
+	$.get('./config/load/'+ selected.value);
 	closeDialog("Load")
-	window.location.href = '/settings'
+	window.location.href = './settings'
 }
 
 $("#settings :input").change(function() {
@@ -111,6 +111,5 @@ function saveSettings(){
 		$.post('/settings', serializedData);
 	}
 	$("#saveButton").toggle()
-	$("#profileMenu").toggle()	
+	$("#profileMenu").toggle()
 }
-

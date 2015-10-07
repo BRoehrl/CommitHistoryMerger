@@ -34,7 +34,7 @@ function refreshQuery(){
   var dates = []
 
 
-  var items = $(tagBar).tagsinput('items') 
+  var items = $(tagBar).tagsinput('items')
   var arrayLength = items.length;
   for (var i = 0; i < arrayLength; i++) {
     var wholeTag = items[i];
@@ -55,7 +55,7 @@ function refreshQuery(){
 		}
     }
 
-    var query = '/'
+    var query = './'
     if(authors.length>0){
       query = query + '&author=' + authors.join(';');
     }
@@ -78,6 +78,6 @@ function refreshQuery(){
     }
     query = query.replace('&','?');
     var oldPath = window.location.href.substring(window.location.href.lastIndexOf("/"));
-    if (oldPath != encodeURI(query)) window.location = query; 
-    console.log(oldPath+" : " +encodeURI(query)) 
+    if (oldPath != encodeURI(query)) window.location = query;
+    console.log(oldPath+" : " +encodeURI(query))
 }

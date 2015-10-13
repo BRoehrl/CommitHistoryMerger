@@ -5,15 +5,12 @@
   {{range .RepoData}}
   <div class="row filledrow container-fluid">
 	<div class="col-sm-3 col-xs-6 repoCol"><label style="margin-top: 5px">{{.Name}}</label><span class="badge pull-right" style="margin-top: 5px">{{.NrBranches}}</span></div>
-	<div class="col-sm-9 col-xs-6"><select class="form-control" name="{{.Name}}">
+	<div class="col-sm-9 col-xs-6"><select class="form-control repoSelection" name="{{.Name}}">
 	{{range .Branches}}<option value="{{.}}">{{.}}</option>{{end}}
   </select>
   </div>
   </div>{{end}}
 </form>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-	<script src="static/js/bootstrap.min.js"></script>
-	<script src="static/js/repos.js"></script>
-	<script src="static/js/chm.js"></script>
+	{{template "scripts.html" .}}
 </body>
 </html>

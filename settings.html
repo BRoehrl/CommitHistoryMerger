@@ -25,10 +25,6 @@
 				<h4 class="row">Max number of Repositories<input type="number" min="100" step="100" class="form-control" id="maxRepos" name="maxRepos" value="{{.Settings.MaxRepos}}"></h4>
 			</div>
 		</form>
-
-
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-		<script src="static/js/bootstrap.min.js"></script>
-		<script src="static/js/chm.js"></script>
+	{{template "scripts.html" .}}
 	</body>
 </html>

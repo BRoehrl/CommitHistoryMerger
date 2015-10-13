@@ -32,12 +32,12 @@
 		  <span class="icon-bar"></span>
         </button>
         <button id="saveButton" onclick="saveSettings()" class="navbar-toggle btn btn-primary" style="display: none;"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
-        <a class="navbar-brand" href="./">{{.Title}}</a>
+        <a class="navbar-brand" href="./" onclick="showWaitDialog()">{{.Title}}</a>
       </div>
       <div>
         <div class="collapse navbar-collapse" id="myNavbar">
           <ul class="nav navbar-nav">
-            <li><a href="./">Commits</a></li>
+            <li><a href="./"  onclick="showWaitDialog()">Commits</a></li>
             <li><a href="./authors">Authors</a></li>
             <li><a href="./repositories">Repositories</a></li>
 			<li><a href="./settings"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
@@ -46,31 +46,69 @@
             <li id="profileMenu" class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true">Profile <span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li><a onclick="openDialog('Save')" href="javascript:void(0);">Save</a></li>
-                <li><a onclick="openDialog('Load')" href="javascript:void(0);">Load</a></li>
+								<li><a type="button" data-toggle="modal" data-target="#dialogSave">Save</a></li>
+								<li><a type="button" data-toggle="modal" data-target="#dialogLoad">Load</a></li>
               </ul>
             </li>
           </ul>
         </div>
-		<dialog id="dialogSave">
-			<form action="javascript:saveProfile()">
-				<label for="profileName">Please enter a Profile name</label><input id="profileName">
-			</form>
-			<button onclick="saveProfile()">Save</button>
-			<button onclick="closeDialog('Save')">Cancel</button>
-	    </dialog>
-		<dialog id="dialogLoad">
-			<form action="javascript:loadProfile()">
-				<div class="form-group">
-				  <label for="profileName">Please select a Profile:</label>
-				  <select class="form-control" id="selectedProfile">
-					{{range .Profiles}}<option value="{{.}}">{{.}}</option>{{end}}
-				  </select>
-				</div>
-			</form>
-			<button onclick="loadProfile()">Load</button>
-			<button onclick="closeDialog('Load')">Cancel</button>
-	    </dialog>
       </div>
     </div>
   </nav>
+	<div id="dialogSave" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p>
+						<label for="profileName">Please enter Profile name</label>
+					</p>
+					<p>
+						<select class="combobox input form-control" id=profileName type=text>
+							<option></option>
+							{{range .Profiles}}
+								<option value="{{.}}">{{.}}</option>
+							{{end}}
+						</select>
+					</p>
+					<p>
+						<button onclick="saveProfile()" type="button" class="btn btn-default" data-dismiss="modal">Save</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="dialogLoad" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p>
+						<label for="selectedProfile">Please select a Profile</label>
+					</p>
+					<p>
+					  <select class="form-control" id="selectedProfile">
+							{{range .Profiles}}<option value="{{.}}">{{.}}</option>{{end}}
+					  </select>
+					</p>
+					<p>
+						<button onclick="loadProfile()" type="button" class="btn btn-default" data-dismiss="modal">Load</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="pleaseWaitDialog" class="modal fade">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1>Loading...</h1>
+				</div>
+				<div class="modal-body">
+					<div class="progress">
+						<div class="progress-bar progress-bar-striped active" role="progressbar" style="width: 100%"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>

@@ -1,60 +1,59 @@
 <head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-		<meta name="description" content="">
-		<meta name="author" content="">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
 
-		<title>{{.Title}}</title>
+	<title>{{.Title}}</title>
 
-		<!-- Bootstrap core CSS -->
-		<link rel="stylesheet" href="static/css/bootstrap.min.css">
-		<!-- Custom styles for this template -->
-		<link rel="stylesheet" href="static/css/starter-template.css">
-		<link rel="stylesheet" href="static/css/grid.css">
-		<link rel="stylesheet" href="static/css/bootstrap-tagsinput.css">
-		<link rel="stylesheet" href="static/css/bootstrap-combobox.css">
+	<link rel="stylesheet" href="static/css/bootstrap.min.css">
+	<link rel="stylesheet" href="static/css/starter-template.css">
+	<link rel="stylesheet" href="static/css/grid.css">
+	<link rel="stylesheet" href="static/css/bootstrap-tagsinput.css">
+	<link rel="stylesheet" href="static/css/bootstrap-combobox.css">
 
+</head>
 
-	</head>
+<body>
 
-	<body>
-
-
-  <nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-		  <span class="icon-bar"></span>
-        </button>
-        <button id="saveButton" onclick="saveSettings()" class="navbar-toggle btn btn-primary" style="display: none;"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
-        <a class="navbar-brand" href="./" onclick="showWaitDialog()">{{.Title}}</a>
-      </div>
-      <div>
-        <div class="collapse navbar-collapse" id="myNavbar">
-          <ul class="nav navbar-nav">
-            <li><a href="./"  onclick="showWaitDialog()">Commits</a></li>
-            <li><a href="./authors">Authors</a></li>
-            <li><a href="./repositories">Repositories</a></li>
-			<li><a href="./settings"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
-          </ul>
-		  <ul class="nav navbar-nav navbar-right">
-            <li id="profileMenu" class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true">Profile <span class="caret"></span></a>
-              <ul class="dropdown-menu">
-								<li><a type="button" data-toggle="modal" data-target="#dialogSave">Save</a></li>
-								<li><a type="button" data-toggle="modal" data-target="#dialogLoad">Load</a></li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </nav>
+	<nav class="navbar navbar-inverse navbar-fixed-top">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<button id="saveButton" onclick="saveSettings()" class="navbar-toggle btn btn-primary" style="display: none;">
+					<span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
+				<a class="navbar-brand" href="./" onclick="showWaitDialog()">{{.Title}}</a>
+			</div>
+			<div>
+				<div class="collapse navbar-collapse" id="myNavbar">
+					<ul class="nav navbar-nav">
+						<li><a href="./" onclick="showWaitDialog()">Commits</a></li>
+						<li><a href="./authors">Authors</a></li>
+						<li><a href="./repositories">Repositories</a></li>
+						<li>
+							<a href="./settings">
+								<span class="glyphicon glyphicon-cog"></span> Settings</a>
+						</li>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li id="profileMenu" class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true">Profile <span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li><a href="" type="button" data-toggle="modal" data-target="#dialogSave">Save</a></li>
+								<li><a href="" type="button" data-toggle="modal" data-target="#dialogLoad">Load</a></li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</nav>
 	<div id="dialogSave" class="modal fade" role="dialog">
 		<div class="modal-dialog modal-sm">
 			<div class="modal-content">
@@ -66,7 +65,7 @@
 						<select class="combobox input form-control" id=profileName type=text>
 							<option></option>
 							{{range .Profiles}}
-								<option value="{{.}}">{{.}}</option>
+							<option value="{{.}}">{{.}}</option>
 							{{end}}
 						</select>
 					</p>
@@ -86,9 +85,10 @@
 						<label for="selectedProfile">Please select a Profile</label>
 					</p>
 					<p>
-					  <select class="form-control" id="selectedProfile">
-							{{range .Profiles}}<option value="{{.}}">{{.}}</option>{{end}}
-					  </select>
+						<select class="form-control" id="selectedProfile">
+							{{range .Profiles}}
+							<option value="{{.}}">{{.}}</option>{{end}}
+						</select>
 					</p>
 					<p>
 						<button onclick="loadProfile()" type="button" class="btn btn-default" data-dismiss="modal">Load</button>

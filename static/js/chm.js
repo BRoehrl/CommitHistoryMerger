@@ -11,32 +11,8 @@ function getCommit(id) {
 
 }
 
-function openDialog(filterBy) {
-	switch(filterBy) {
-			case 'Save':
-				var dialog = document.getElementById('dialogSave')
-				break;
-			case 'Load':
-				var dialog = document.getElementById('dialogLoad')
-				break;
-			default:
-				return;
-		}
-	dialog.show()
-}
-
-function closeDialog(filterBy) {
-	switch(filterBy) {
-			case 'Save':
-				var dialog = document.getElementById('dialogSave')
-				break;
-			case 'Load':
-				var dialog = document.getElementById('dialogLoad')
-				break;
-			default:
-				return;
-		}
-	dialog.close()
+function showWaitDialog(){
+	$(pleaseWaitDialog).modal('show');
 }
 
 function sendTag(tagType){

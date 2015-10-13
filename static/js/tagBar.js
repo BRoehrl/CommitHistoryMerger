@@ -1,5 +1,6 @@
 var isLoading = false
 window.onload = function() {
+  if ($('#tagBar').length) {
     isLoading = true
     var tags = sessionStorage.getItem('tags');
     if (tags !== null) $(tagBar).val(tags);
@@ -9,26 +10,27 @@ window.onload = function() {
     }
     isLoading = false
     refreshQuery()
+  }
 }
 
-$(tagBar).on('beforeItemAdd', function(event) {
-  if (event.item.indexOf(':') == -1){
+$('#tagBar').on('beforeItemAdd', function(event) {
+  if (event.item.indexOf(':') == -1) {
     event.cancel = true
     return
   }
 });
 
-$(tagBar).on('itemAdded', function() {
+$('#tagBar').on('itemAdded', function() {
   sessionStorage.setItem('tags', $(tagBar).val());
   if (!isLoading) refreshQuery();
 });
 
-$(tagBar).on('itemRemoved', function() {
+$('#tagBar').on('itemRemoved', function() {
   sessionStorage.setItem('tags', $(tagBar).val());
   refreshQuery();
 });
 
-function refreshQuery(){
+function refreshQuery() {
   var authors = []
   var repos = []
   var dates = []
@@ -39,10 +41,10 @@ function refreshQuery(){
   for (var i = 0; i < arrayLength; i++) {
     var wholeTag = items[i];
     var type = wholeTag.substring(0, wholeTag.indexOf(":"));
-    var tag = wholeTag.substring(wholeTag.indexOf(":")+1);
-    switch (type){
+    var tag = wholeTag.substring(wholeTag.indexOf(":") + 1);
+    switch (type) {
       case 'Author':
-      	authors.push(tag)
+        authors.push(tag)
         break;
       case 'Repo':
         repos.push(tag)
@@ -52,31 +54,34 @@ function refreshQuery(){
         break;
       default:
         return;
-		}
     }
+  }
 
-    var query = './'
-    if(authors.length>0){
-      query = query + '&author=' + authors.join(';');
-    }
-    if(repos.length>0){
-      query = query +  '&repo=' + repos.join(';');
-    }
-    if(dates.length>0){
-      var earliestDate = new Date(3000, 1, 1);
-      var earliestString = '3000-01-01';
-      for (var i = 0 ; i < dates.length; i++){
-        var dateParts = dates[i].split("-");
-        var date = new Date(dateParts[0], (dateParts[1] - 1), dateParts[2]);
-        if (date <= earliestDate) {
-          earliestDate = date;
-          earliestString = dates[i];
-          }
+  var query = './'
+  if (authors.length > 0) {
+    query = query + '&author=' + authors.join(';');
+  }
+  if (repos.length > 0) {
+    query = query + '&repo=' + repos.join(';');
+  }
+  if (dates.length > 0) {
+    var earliestDate = new Date(3000, 1, 1);
+    var earliestString = '3000-01-01';
+    for (var i = 0; i < dates.length; i++) {
+      var dateParts = dates[i].split("-");
+      var date = new Date(dateParts[0], (dateParts[1] - 1), dateParts[2]);
+      if (date <= earliestDate) {
+        earliestDate = date;
+        earliestString = dates[i];
       }
-      strDate = earliestString + 'T00:00:00Z';
-      query = query +  '&since=' + strDate;
     }
-    query = query.replace('&','?');
-    var oldPath = "." + window.location.href.substring(window.location.href.lastIndexOf("/"));
-    if (oldPath != encodeURI(query)) window.location = query;
+    strDate = earliestString + 'T00:00:00Z';
+    query = query + '&since=' + strDate;
+  }
+  query = query.replace('&', '?');
+  var oldPath = "." + window.location.href.substring(window.location.href.lastIndexOf("/"));
+  if (oldPath != encodeURI(query)) {
+    $(pleaseWaitDialog).modal('show');
+    window.location = query;
+  }
 }

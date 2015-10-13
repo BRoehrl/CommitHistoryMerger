@@ -13,15 +13,6 @@ function getCommit(id) {
 
 function openDialog(filterBy) {
 	switch(filterBy) {
-			case 'Author':
-				var dialog = document.getElementById('dialogAuthor')
-				break;
-			case 'Repository':
-				var dialog = document.getElementById('dialogRepo')
-				break;
-			case 'Date':
-				var dialog = document.getElementById('dialogDate')
-				break;
 			case 'Save':
 				var dialog = document.getElementById('dialogSave')
 				break;
@@ -36,15 +27,6 @@ function openDialog(filterBy) {
 
 function closeDialog(filterBy) {
 	switch(filterBy) {
-			case 'Author':
-				var dialog = document.getElementById('dialogAuthor')
-				break;
-			case 'Repository':
-				var dialog = document.getElementById('dialogRepo')
-				break;
-			case 'Date':
-				var dialog = document.getElementById('dialogDate')
-				break;
 			case 'Save':
 				var dialog = document.getElementById('dialogSave')
 				break;
@@ -58,7 +40,6 @@ function closeDialog(filterBy) {
 }
 
 function sendTag(tagType){
-	closeDialog(tagType)
 
 	var tagBar = document.getElementById('tagBar');
 

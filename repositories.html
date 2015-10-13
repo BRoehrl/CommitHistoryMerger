@@ -3,8 +3,8 @@
 	{{template "headAndNavbar.html" .}}
 	<form class="form-horizontal" role="form">
   {{range .RepoData}}
-  <div class="row filledrow">
-	<div class="col-sm-3 col-xs-6 repoCol"><label>{{.Name}}</label><span class="badge pull-right">{{.NrBranches}}</span></div>
+  <div class="row filledrow container-fluid">
+	<div class="col-sm-3 col-xs-6 repoCol"><label style="margin-top: 5px">{{.Name}}</label><span class="badge pull-right" style="margin-top: 5px">{{.NrBranches}}</span></div>
 	<div class="col-sm-9 col-xs-6"><select class="form-control" name="{{.Name}}">
 	{{range .Branches}}<option value="{{.}}">{{.}}</option>{{end}}
   </select>

@@ -8,9 +8,9 @@
 					<div class="input-group-btn">
 						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-filter"></span> filter <span class="caret"></span></button>
 						<ul class="dropdown-menu">
-							<li><a onclick="openDialog('Author')" href="javascript:void(0);">Author</a></li>
-							<li><a onclick="openDialog('Repository')" href="javascript:void(0);">Repository</a></li>
-							<li><a onclick="openDialog('Date')" href="javascript:void(0);">Date</a></li>
+							<li><a type="button" data-toggle="modal" data-target="#dialogAuthor">Author</a></li>
+							<li><a type="button" data-toggle="modal" data-target="#dialogRepo">Repository</a></li>
+							<li><a type="button" data-toggle="modal" data-target="#dialogDate">Date</a></li>
 						</ul>
 					</div>
 					<input type="text" id="tagBar" value="loading..." data-role="tagsinput"/>
@@ -69,42 +69,80 @@
 			</div>
 		</div>
 	</div>
-	<dialog id="dialogAuthor">
-		<form action="javascript:sendTag('Author')">
-			<label for="authorTag">Please enter Author name</label>
-			<input id=authorTag type=text list=authors >
-			<datalist id=authors >
-			   {{range .Authors}}<option value="{{.}}">{{.}}{{end}}
-			</datalist>
-		</form>
-		<button onclick="sendTag('Author')">Add Tag</button>
-		<button onclick="closeDialog('Author')">Cancel</button>
-	</dialog>
-	<dialog id="dialogRepo">
-		<form action="javascript:sendTag('Repository')">
-			<label for="repoTag">Please enter Repository name: </label>
-			<input id=repoTag type=text list=repos >
-			<datalist id=repos >
-			   {{range .Repos}}<option value="{{.}}">{{.}}{{end}}
-			</datalist>
-		</form>
-		<button onclick="sendTag('Repository')">Add Tag</button>
-		<button onclick="closeDialog('Repository')">Cancel</button>
-	</dialog>
-	<dialog id="dialogDate">
-			<label for="dateTag">Please select a Date: </label>
-			<input type="date" class="datepicker" id="dateTag">
-			<button onclick="sendTag('Date')">Add Tag</button>
-		<button onclick="closeDialog('Date')">Cancel</button>
-	</dialog>
+	<div id="dialogAuthor" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p>
+						<label for="authorTag">Please enter Author name</label>
+					</p>
+					<p>
+						<select class="combobox input form-control" id=authorTag type=text>
+							<option></option>
+							{{range .Authors}}
+								<option value="{{.}}">{{.}}</option>
+							{{end}}
+						</select>
+					</p>
+					<p>
+						<button onclick="sendTag('Author')" type="button" class="btn btn-default" data-dismiss="modal">Add Tag</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="dialogRepo" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p>
+						<label for="repoTag">Please enter Repository name</label>
+					</p>
+					<p>
+						<select class="combobox input form-control" id=repoTag type=text>
+							<option></option>
+							{{range .Repos}}
+								<option value="{{.}}">{{.}}</option>
+							{{end}}
+						</select>
+					</p>
+					<p>
+						<button onclick="sendTag('Repository')" type="button" class="btn btn-default" data-dismiss="modal">Add Tag</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="dialogDate" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p>
+						<label for="dateTag">Please select a Date</label>
+					</p>
+					<p>
+						<input type="date" class="input form-control" id="dateTag">
+					</p>
+					<p>
+						<button onclick="sendTag('Date')" type="button" class="btn btn-default" data-dismiss="modal">Add Tag</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="static/js/bootstrap.min.js"></script>
 	<script src="static/js/chm.js"></script>
 	<script src="static/js/tagBar.js"></script>
-	<script src="static/js/bootstrap-datepicker.js"></script>
 	<script src="static/js/bootstrap-tagsinput.min.js"></script>
+	<script src="static/js/bootstrap-combobox.js"></script>
 	<script>
-		$('.datepicker').datepicker({ format: "yyyy-mm-dd" });
+		$(document).ready(function(){
+    	$('.combobox').combobox();
+  	});
 	</script>
 </body>
 </html>

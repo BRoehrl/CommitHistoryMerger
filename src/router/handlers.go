@@ -54,6 +54,7 @@ func updatePageData() {
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html"))
 
 	vars := mux.Vars(r)
 

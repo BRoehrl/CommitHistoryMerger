@@ -1,9 +1,9 @@
 var isLoading = false
 window.onload = function() {
     isLoading = true
-    var tags = localStorage.getItem('tags');
+    var tags = sessionStorage.getItem('tags');
     if (tags !== null) $(tagBar).val(tags);
-    var tagArray = tags.split(",")
+    var tagArray = tags.split(",");
     for (var i = 0; i < tagArray.length; i++) {
       $(tagBar).tagsinput('add', tagArray[i])
     }
@@ -19,12 +19,12 @@ $(tagBar).on('beforeItemAdd', function(event) {
 });
 
 $(tagBar).on('itemAdded', function() {
-  localStorage.setItem('tags', $(tagBar).val());
+  sessionStorage.setItem('tags', $(tagBar).val());
   if (!isLoading) refreshQuery();
 });
 
 $(tagBar).on('itemRemoved', function() {
-  localStorage.setItem('tags', $(tagBar).val());
+  sessionStorage.setItem('tags', $(tagBar).val());
   refreshQuery();
 });
 
@@ -77,7 +77,6 @@ function refreshQuery(){
       query = query +  '&since=' + strDate;
     }
     query = query.replace('&','?');
-    var oldPath = window.location.href.substring(window.location.href.lastIndexOf("/"));
+    var oldPath = "." + window.location.href.substring(window.location.href.lastIndexOf("/"));
     if (oldPath != encodeURI(query)) window.location = query;
-    console.log(oldPath+" : " +encodeURI(query))
 }

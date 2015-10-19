@@ -50,6 +50,7 @@ function saveProfile() {
 function loadProfile() {
   var selected = document.getElementById('selectedProfile');
   $.get('./config/load/' + selected.value);
+  showWaitDialog();
   window.location.reload();
 }
 

@@ -24,8 +24,10 @@ body {
 }
 
 .filterrow {
+  border: 1px solid rgb(0,61,124);
   border: 1px solid rgba(0,61,124,.2);
   margin-bottom: 2px;
+  background-color: rgb(0,31,124);
   background-color: rgba(0,31,124,.9);
 }
 
@@ -45,7 +47,9 @@ body {
 [class*="col-"] {
   padding-top: 15px;
   padding-bottom: 15px;
+  background-color: rgb(0,61,124);
   background-color: rgba(0,61,124,.15);
+  border: 1px solid rgb(0,61,124);
   border: 1px solid rgba(0,61,124,.2);
   float: none;
   display: table-cell;
@@ -53,20 +57,21 @@ body {
 }
 
 .noColStyle{
-  padding-top: 0px;
-  padding-bottom: 0px;
+  padding-top: 0;
+  padding-bottom: 0;
   background-color: inherit;
-  border: 0px;
+  border: 0;
 }
 
-.noColStyle.pull-right{
-  padding-top: 0px;
-  padding-bottom: 0px;
+.noColRight{
+  padding-top: 0;
+  padding-bottom: 0;
   text-align: right;
 }
 
 .repoCol {
   background-color: white;
+  border: 2px solid rgb(0,61,124);
   border: 2px solid rgba(0,61,124,.2);
   color: teal;
 }
@@ -109,13 +114,15 @@ h2{
  color: black;
 }
 
-#settings{
+.settingsForm{
   color: teal;
+  background-color: rgb(0,61,124);
   background-color: rgba(0,61,124,.15);
+  border: 1px solid rgb(0,61,124);
   border: 1px solid rgba(0,61,124,.2);
 }
 
-#saveButton{
+.saveButton{
   position: absolute;
   right: 50px;
   background-color: #337ab7;

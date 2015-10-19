@@ -28,6 +28,8 @@ var cachedRepos map[string]bool
 var cacheTime time.Time
 var allRepos git.Repos
 
+var LoadedConfig string
+
 type Commits []Commit
 
 func (c Commits) Len() int {
@@ -143,7 +145,6 @@ func LoadCompleteConfig(fileName string) (err error) {
 	if err != nil {
 		log.Println("Could not parse Config-file", file.Name())
 	}
-
 	SetConfig(completeConfig.Baseconfig)
 	//reload repositories
 	GetCachedRepoObjects()
@@ -151,6 +152,9 @@ func LoadCompleteConfig(fileName string) (err error) {
 		SetRepoBranch(repo, branch)
 	}
 	flushCommitCache()
+	if err == nil {
+		LoadedConfig = fileName
+	}
 	return
 }
 

@@ -16,7 +16,8 @@ import (
 )
 
 type Page struct {
-	Title      string
+	Title,
+	ActiveProfile string
 	Buttondata []Buttondata
 	RepoData   []Repodata
 	Settings   git.Config
@@ -50,6 +51,7 @@ func updatePageData() {
 	page.Authors = processor.GetCachedAuthors()
 	page.Repos = processor.GetCachedRepos()
 	page.Settings = git.GetConfig()
+	page.ActiveProfile = processor.LoadedConfig
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -96,6 +98,7 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 
 func SettingsShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
@@ -106,6 +109,7 @@ func SettingsShow(w http.ResponseWriter, r *http.Request) {
 
 func SettingsPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
@@ -137,6 +141,7 @@ func LoadProfile(w http.ResponseWriter, r *http.Request) {
 
 func ReposShowHtml(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
@@ -175,6 +180,7 @@ func RepoBranchChange(w http.ResponseWriter, r *http.Request) {
 
 func ReposShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(processor.GetCachedRepos()); err != nil {
 		panic(err)

@@ -17,6 +17,7 @@ import (
 
 type Page struct {
 	Title,
+	SinceDateString,
 	ActiveProfile string
 	Buttondata []Buttondata
 	RepoData   []Repodata
@@ -51,6 +52,7 @@ func updatePageData() {
 	page.Authors = processor.GetCachedAuthors()
 	page.Repos = processor.GetCachedRepos()
 	page.Settings = git.GetConfig()
+	page.SinceDateString = page.Settings.SinceTime.Format(time.RFC3339)[:10]
 	page.ActiveProfile = processor.LoadedConfig
 }
 
@@ -239,11 +241,6 @@ func getQueryFromVars(vars map[string]string) processor.Query {
 		if d, err := time.Parse(time.RFC3339, since); err == nil {
 			query.Since = d
 		}
-
-	} else {
-		if d, err := time.Parse("2006-01-02", git.GetConfig().SinceTime); err == nil {
-			query.Since = d
-		}
 	}
 	return query
 }
@@ -254,7 +251,12 @@ func getConfigFromForm(form url.Values) git.Config {
 	config.BaseOrganisation = form.Get("baseOrg")
 	config.GitAuthkey = form.Get("authKey")
 	config.MiscDefaultBranch = form.Get("defaultBranch")
-	config.SinceTime = form.Get("sinceTime")
+	if d, err := time.Parse("2006-01-02", form.Get("sinceTime")); err == nil {
+		// add a day to include commits on day 'since'
+		config.SinceTime = d.AddDate(0, 0, 1)
+	} else {
+		config.SinceTime = time.Time{}
+	}
 	config.MaxRepos, _ = strconv.Atoi(form.Get("maxRepos"))
 	config.MaxBranches, _ = strconv.Atoi(form.Get("maxBranches"))
 

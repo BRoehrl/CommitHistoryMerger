@@ -51,7 +51,7 @@ func flushCommitCache() {
 	cachedCommits = Commits{}
 	cachedShas = make(map[string]bool)
 	cachedAuthors = make(map[string]bool)
-	cacheTime = time.Now()
+	cacheTime = time.Now().AddDate(0, 0, 1)
 }
 
 func flushRepos() {

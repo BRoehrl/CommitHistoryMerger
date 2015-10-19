@@ -27,9 +27,9 @@ func GetCommits(query Query) (commits Commits) {
 		}
 		updateAll = false
 	}
-	// if no date set use two month ago
+	// if no date set use default Date
 	if query.Since.Equal(time.Time{}) {
-		query.Since = time.Now().AddDate(0, -2, 0)
+		query.Since = git.GetConfig().SinceTime
 	}
 	if query.Since.Before(cacheTime) {
 		err := getGitCommits(query.Since, cacheTime)

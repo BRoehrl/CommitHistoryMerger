@@ -17,13 +17,13 @@ func init() {
 		MaxBranches:       100,
 	}
 
-	twoMonthAgo := time.Now().AddDate(0, -2, 0)
-	config.SinceTime = twoMonthAgo.Format("2006-01-02")
+	config.SinceTime = time.Now().AddDate(0, -2, 0)
 }
 
 type Config struct {
-	GitUrl, BaseOrganisation, GitAuthkey, SinceTime, MiscDefaultBranch string
-	MaxRepos, MaxBranches                                              int
+	GitUrl, BaseOrganisation, GitAuthkey, MiscDefaultBranch string
+	MaxRepos, MaxBranches                                   int
+	SinceTime                                               time.Time
 }
 
 func GetConfig() Config {
@@ -43,7 +43,7 @@ func SetConfig(connData Config) (updateAll, miscBranchChanged bool) {
 		config.GitAuthkey = connData.GitAuthkey
 		updateAll = true
 	}
-	if connData.SinceTime != "" && config.SinceTime != connData.SinceTime {
+	if !(connData.SinceTime.Equal(config.SinceTime) || connData.SinceTime.Equal(time.Time{})) {
 		config.SinceTime = connData.SinceTime
 		updateAll = false
 	}

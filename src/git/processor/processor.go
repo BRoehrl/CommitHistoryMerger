@@ -77,7 +77,7 @@ func getGitCommits(from, to time.Time) (err error) {
 				Repo:    repo.Name,
 				Branch:  repo.SelectedBranch,
 				Author:  gitCom.ActualCommit.Author.Name,
-				Link:    gitCom.HtmlUrl,
+				Link:    gitCom.HtmlURL,
 				Comment: gitCom.ActualCommit.Message,
 				Time:    gitCom.ActualCommit.Author.Date,
 			}
@@ -121,7 +121,7 @@ func SaveCompleteConfig(fileName string) error {
 	for _, repo := range allRepos {
 		selectedBranches[repo.Name] = repo.SelectedBranch
 	}
-	err := saveInJsonFile(completeConfig{baseConfig, selectedBranches}, "configs", fileName)
+	err := saveInJSONFile(completeConfig{baseConfig, selectedBranches}, "configs", fileName)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func LoadCompleteConfig(fileName string) (err error) {
 	return
 }
 
-func saveInJsonFile(i interface{}, dir string, fileName string) (err error) {
+func saveInJSONFile(i interface{}, dir string, fileName string) (err error) {
 	if _, err = os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			os.Mkdir(dir, 0755)

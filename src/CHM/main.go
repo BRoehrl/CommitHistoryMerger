@@ -30,7 +30,7 @@ func main() {
 	err := processor.LoadCompleteConfig(configFlag)
 	if err != nil {
 		connConf = git.Config{
-			GitUrl:            "https://api.github.com",
+			GitURL:            "https://api.github.com",
 			BaseOrganisation:  "informationgrid",
 			MiscDefaultBranch: "develop",
 			GitAuthkey:        ""}

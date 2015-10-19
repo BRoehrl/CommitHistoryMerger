@@ -9,7 +9,7 @@ var config Config
 
 func init() {
 	config = Config{
-		GitUrl:            "https://api.github.com",
+		GitURL:            "https://api.github.com",
 		BaseOrganisation:  "informationgrid",
 		GitAuthkey:        "",
 		MiscDefaultBranch: "",
@@ -21,7 +21,7 @@ func init() {
 }
 
 type Config struct {
-	GitUrl, BaseOrganisation, GitAuthkey, MiscDefaultBranch string
+	GitURL, BaseOrganisation, GitAuthkey, MiscDefaultBranch string
 	MaxRepos, MaxBranches                                   int
 	SinceTime                                               time.Time
 }
@@ -31,8 +31,8 @@ func GetConfig() Config {
 }
 
 func SetConfig(connData Config) (updateAll, miscBranchChanged bool) {
-	if connData.GitUrl != "" && connData.GitUrl != config.GitUrl {
-		config.GitUrl = connData.GitUrl
+	if connData.GitURL != "" && connData.GitURL != config.GitURL {
+		config.GitURL = connData.GitURL
 		updateAll = true
 	}
 	if connData.BaseOrganisation != "" && config.BaseOrganisation != connData.BaseOrganisation {

@@ -5,10 +5,10 @@ import (
 )
 
 type Repo struct {
-	Id             int    `json:"id"`
+	ID             int    `json:"id"`
 	Name           string `json:"name"`
-	Url            string `json:"url"`
-	HtmlUrl        string `json:"html_url"`
+	URL            string `json:"url"`
+	HtmlURL        string `json:"html_url"`
 	Language       string `json:"language"`
 	DefaultBranch  string `json:"default_branch"`
 	Branches       map[string]string
@@ -17,20 +17,20 @@ type Repo struct {
 
 type Repos []Repo
 
-type GitUser struct {
-	Id      int    `json:"id"`
+type User struct {
+	ID      int    `json:"id"`
 	Name    string `json:"login"`
-	Url     string `json:"url"`
-	HtmlUrl string `json:"html_url"`
+	URL     string `json:"url"`
+	HtmlURL string `json:"html_url"`
 }
 
-type JsonCommit struct {
+type JSONCommit struct {
 	Sha          string       `json:"sha"`
 	ActualCommit SimpleCommit `json:"commit"`
-	Url          string       `json:"url"`
-	HtmlUrl      string       `json:"html_url"`
-	Author       GitUser      `json:"author"`
-	Committer    GitUser      `json:"committer"`
+	URL          string       `json:"url"`
+	HtmlURL      string       `json:"html_url"`
+	Author       User         `json:"author"`
+	Committer    User         `json:"committer"`
 }
 
 type SimpleUser struct {
@@ -43,15 +43,15 @@ type SimpleCommit struct {
 	Author    SimpleUser `json:"author"`
 	Committer SimpleUser `json:"committer"`
 	Message   string     `json:"message"`
-	Url       string     `json:"url"`
+	URL       string     `json:"url"`
 }
 
 type Branch struct {
 	Name   string     `json:"name"`
-	Commit JsonCommit `json:"commit"`
+	Commit JSONCommit `json:"commit"`
 }
 
-type SortableCommits []JsonCommit
+type SortableCommits []JSONCommit
 
 func (sc SortableCommits) Len() int {
 	return len(sc)

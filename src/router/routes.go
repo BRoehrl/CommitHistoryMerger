@@ -74,11 +74,11 @@ var routes = Routes{
 		ReposShow,
 	},
 	Route{
-		"RepositoryHtml",
+		"RepositoryHTML",
 		"GET",
 		"/repositories",
 		nil,
-		ReposShowHtml,
+		ReposShowHTML,
 	},
 	Route{
 		"RepoBranchChange",

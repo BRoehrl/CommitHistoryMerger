@@ -33,7 +33,7 @@ type Repodata struct {
 }
 type Buttondata struct {
 	Name,
-	Id,
+	ID,
 	DateString,
 	Repository string
 }
@@ -141,7 +141,7 @@ func LoadProfile(w http.ResponseWriter, r *http.Request) {
 	processor.LoadCompleteConfig(vars["name"])
 }
 
-func ReposShowHtml(w http.ResponseWriter, r *http.Request) {
+func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 	err := r.ParseForm()
@@ -247,7 +247,7 @@ func getQueryFromVars(vars map[string]string) processor.Query {
 
 func getConfigFromForm(form url.Values) git.Config {
 	config := git.Config{}
-	config.GitUrl = form.Get("baseUrl")
+	config.GitURL = form.Get("baseURL")
 	config.BaseOrganisation = form.Get("baseOrg")
 	config.GitAuthkey = form.Get("authKey")
 	config.MiscDefaultBranch = form.Get("defaultBranch")

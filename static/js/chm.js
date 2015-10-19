@@ -23,7 +23,6 @@ function sendTag(tagType) {
   switch (tagType) {
 
     case 'Author':
-      //tagInput = document.getElementById('authorTag');
       tagInput = $('#authorTag').parent().find('input.combobox').val();
       if (tagInput !== "") $('#tagBar').tagsinput('add', 'Author:' + tagInput);
       break;
@@ -68,7 +67,9 @@ function saveSettings() {
     var $inputs = $("#settings").find("input");
     var serializedData = $form.serialize();
     $.post('/settings', serializedData);
-  }
+    // TODO Maybe show modal save dialog
+    }
+
   $("#saveButton").toggle();
   $("#profileMenu").toggle();
 }

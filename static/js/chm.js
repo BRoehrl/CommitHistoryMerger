@@ -23,12 +23,13 @@ function sendTag(tagType) {
   switch (tagType) {
 
     case 'Author':
-      tagInput = document.getElementById('authorTag');
-      if (tagInput !== "") $('#tagBar').tagsinput('add', 'Author:' + tagInput.value);
+      //tagInput = document.getElementById('authorTag');
+      tagInput = $('#authorTag').parent().find('input.combobox').val();
+      if (tagInput !== "") $('#tagBar').tagsinput('add', 'Author:' + tagInput);
       break;
     case 'Repository':
-      tagInput = document.getElementById('repoTag');
-      if (tagInput !== "") $('#tagBar').tagsinput('add', 'Repo:' + tagInput.value);
+      tagInput = $('#repoTag').parent().find('input.combobox').val();
+      if (tagInput !== "") $('#tagBar').tagsinput('add', 'Repo:' + tagInput);
       break;
     case 'Date':
       tagInput = document.getElementById('dateTag');
@@ -42,8 +43,9 @@ function sendTag(tagType) {
 }
 
 function saveProfile() {
-  var nameInput = document.getElementById('profileName');
-  $.post('./config/save/' + nameInput.value);
+  var nameInput = $('#profileName').parent().find('input.combobox').val();
+  $.post('./config/save/' + nameInput);
+  showWaitDialog();
   window.location.reload();
 }
 

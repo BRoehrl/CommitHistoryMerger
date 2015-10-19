@@ -115,13 +115,18 @@ type completeConfig struct {
 	SelectedBranches map[string]string
 }
 
-func SaveCompleteConfig(fileName string) {
+func SaveCompleteConfig(fileName string) error {
 	baseConfig := git.GetConfig()
 	selectedBranches := make(map[string]string)
 	for _, repo := range allRepos {
 		selectedBranches[repo.Name] = repo.SelectedBranch
 	}
-	saveInJsonFile(completeConfig{baseConfig, selectedBranches}, "configs", fileName)
+	err := saveInJsonFile(completeConfig{baseConfig, selectedBranches}, "configs", fileName)
+	if err != nil {
+		return err
+	}
+	LoadedConfig = fileName
+	return nil
 }
 
 func getSavedConfigs() (fileNames []string, err error) {

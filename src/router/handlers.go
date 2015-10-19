@@ -168,15 +168,12 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "repositories.html", page)
 }
 func RepoBranchChange(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	repo, ok := vars["repo"]
-	if !ok { // TODO send error
-		return
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-	branch, ok := vars["branch"]
-	if !ok { // TODO send error
-		return
-	}
+	repo := r.FormValue("repo")
+	branch := r.FormValue("branch")
 	processor.SetRepoBranch(repo, branch)
 }
 

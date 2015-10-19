@@ -83,7 +83,7 @@ var routes = Routes{
 	Route{
 		"RepoBranchChange",
 		"POST",
-		"/repositories/{repo}/{branch}",
+		"/repositories",
 		nil,
 		RepoBranchChange,
 	},

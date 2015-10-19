@@ -1,3 +1,4 @@
 $(".repoSelection").on('change', function(event) {
-  $.post('./repositories/' + this.name + "/" + this.value);
+  var params =  { 'repo': this.name, 'branch': this.value };
+  $.post('./repositories', params);
 });

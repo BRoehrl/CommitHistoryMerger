@@ -33,6 +33,16 @@ type JSONCommit struct {
 	Committer    User         `json:"committer"`
 }
 
+type Commit struct {
+	Sha,
+	Repo,
+	Branch,
+	Author,
+	Link,
+	Comment string
+	Time time.Time
+}
+
 type SimpleUser struct {
 	Name  string    `json:"name"`
 	Email string    `json:"email"`

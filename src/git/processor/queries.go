@@ -17,6 +17,72 @@ type Query struct {
 
 var updateCommits, updateAll bool
 
+func SendCommits(query Query, commits chan git.Commit) {
+
+	if updateCommits || updateAll {
+		flushCommitCache()
+		updateCommits = false
+		if updateAll {
+			flushRepos()
+		}
+		updateAll = false
+	}
+	// if no date set use default Date
+	if query.Since.Equal(time.Time{}) {
+		query.Since = git.GetConfig().SinceTime
+	}
+
+	allCommits := make(chan git.Commit)
+	// fetch commits if not in cache else send cache to channel
+	if query.Since.Before(cacheTime) {
+		go sendGitCommits(query.Since, cacheTime, allCommits)
+		cacheTime = query.Since
+	} else {
+		allCommits = make(chan git.Commit, len(cachedCommits))
+		for _, commit := range cachedCommits {
+			allCommits <- commit
+		}
+		close(allCommits)
+	}
+	for commit := range allCommits {
+		addSingleCommitToCache(commit, false)
+		if keepCommit(query, commit) {
+			commits <- commit
+		}
+	}
+	close(commits)
+	return
+}
+
+func keepCommit(query Query, commit git.Commit) bool {
+	keep := true
+	if len(query.Authors) != 0 {
+		keep = false
+		for _, author := range query.Authors {
+			if commit.Author == author {
+				keep = true
+			}
+		}
+	}
+
+	if keep {
+		if len(query.Repos) != 0 {
+			keep = false
+			for _, repo := range query.Repos {
+				if commit.Repo == repo {
+					keep = true
+				}
+			}
+		}
+	}
+	if keep {
+		if commit.Time.Before(query.Since) {
+			keep = false
+		}
+	}
+	return keep
+}
+
 func GetCommits(query Query) (commits Commits) {
 	commits = Commits{}
 	if updateCommits || updateAll {
@@ -73,7 +139,7 @@ func GetCommits(query Query) (commits Commits) {
 	return
 }
 
-func GetSingleCommit(sha string) (singleCommit Commit) {
+func GetSingleCommit(sha string) (singleCommit git.Commit) {
 	if !cachedShas[sha] {
 		return
 	}

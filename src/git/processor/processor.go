@@ -11,15 +11,7 @@ import (
 	"time"
 )
 
-type Commit struct {
-	Sha,
-	Repo,
-	Branch,
-	Author,
-	Link,
-	Comment string
-	Time time.Time
-}
+
 
 var cachedCommits Commits
 var cachedShas map[string]bool
@@ -30,7 +22,7 @@ var allRepos git.Repos
 
 var LoadedConfig string
 
-type Commits []Commit
+type Commits []git.Commit
 
 func (c Commits) Len() int {
 	return len(c)
@@ -72,7 +64,7 @@ func getGitCommits(from, to time.Time) (err error) {
 			return err
 		}
 		for _, gitCom := range singleRepoCommits {
-			newCommit := Commit{
+			newCommit := git.Commit{
 				Sha:     gitCom.Sha,
 				Repo:    repo.Name,
 				Branch:  repo.SelectedBranch,
@@ -88,6 +80,22 @@ func getGitCommits(from, to time.Time) (err error) {
 	return
 }
 
+
+func sendGitCommits(from, to time.Time, allCommits chan git.Commit) {
+	if len(cachedRepos) == 0 {
+		allRepos, _ = git.GetRepositories()
+	}
+	for _, repo := range allRepos {
+		//maybe compute parallel with waitgroup: go repo.SendAllCommitsBetween(from, to, allCommits)
+		git.CommitWaitGroup.Add(1)
+		go repo.SendAllCommitsBetween(from, to, allCommits)
+	}
+	git.CommitWaitGroup.Wait()
+	close(allCommits)
+	sort.Sort(cachedCommits)
+	return
+}
+
 func addCommitsToCache(newCommits Commits) {
 	for _, nc := range newCommits {
 		addSingleCommitToCache(nc, false)
@@ -95,7 +103,7 @@ func addCommitsToCache(newCommits Commits) {
 	sort.Sort(cachedCommits)
 }
 
-func addSingleCommitToCache(nc Commit, reSort bool) (commitAdded bool) {
+func addSingleCommitToCache(nc git.Commit, reSort bool) (commitAdded bool) {
 	commitAdded = !cachedShas[nc.Sha]
 	if commitAdded {
 		cachedShas[nc.Sha] = true

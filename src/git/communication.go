@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -169,6 +170,41 @@ func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JSONCommit, er
 		}
 
 	}
+	return
+}
+
+var CommitWaitGroup sync.WaitGroup
+
+func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit) {
+	currentPage := 1
+	for {
+		query := config.GitURL + "/repos/" + config.BaseOrganisation
+		query += "/" + r.Name
+		query += "/commits?since=" + from.Format(time.RFC3339) + "&until=" + to.Format(time.RFC3339)
+		query += "&sha=" + r.Branches[r.SelectedBranch]
+		query += "&per_page=100&page=" + strconv.Itoa(currentPage)
+
+		currentPage++
+		var singlePage []JSONCommit
+		err := UnmarshalFromGetResponse(query, &singlePage)
+		for _, gitCom := range singlePage {
+			newCommit := Commit{
+				Sha:     gitCom.Sha,
+				Repo:    r.Name,
+				Branch:  r.SelectedBranch,
+				Author:  gitCom.ActualCommit.Author.Name,
+				Link:    gitCom.HtmlURL,
+				Comment: gitCom.ActualCommit.Message,
+				Time:    gitCom.ActualCommit.Author.Date,
+			}
+			allComits <- newCommit
+		}
+
+		if err != nil || islastPage {
+			break
+		}
+	}
+	CommitWaitGroup.Done()
 	return
 }
 

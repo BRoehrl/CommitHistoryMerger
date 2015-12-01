@@ -6,8 +6,10 @@ import (
 	"git"
 	"git/processor"
 	"html/template"
+	"log"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -64,7 +66,16 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 	query := getQueryFromVars(vars)
 
-	queryResult := processor.GetCommits(query)
+	//queryResult := processor.GetCommits(query)
+	//Experimental: Concurrent implementation with chanels
+	queryResult := processor.Commits{}
+	commitChanel := make(chan git.Commit)
+	go processor.SendCommits(query, commitChanel)
+	for commit := range commitChanel {
+		queryResult = append(queryResult, commit)
+	}
+	sort.Sort(queryResult)
+	log.Println(len(queryResult))
 
 	commitData := []Buttondata{}
 	for _, com := range queryResult {

@@ -59,7 +59,7 @@ func keepCommit(query Query, commit git.Commit) bool {
 	if len(query.Authors) != 0 {
 		keep = false
 		for _, author := range query.Authors {
-			if commit.Author == author {
+			if commit.Author == author || author == "" {
 				keep = true
 			}
 		}
@@ -69,7 +69,7 @@ func keepCommit(query Query, commit git.Commit) bool {
 		if len(query.Repos) != 0 {
 			keep = false
 			for _, repo := range query.Repos {
-				if commit.Repo == repo {
+				if commit.Repo == repo || repo == "" {
 					keep = true
 				}
 			}

@@ -22,7 +22,7 @@
 		<div class="container-fluid">
 			<div class="row">
 				<div data-spy="scroll" data-target="#details" data-offset="12" class="test2">
-					<div class="col-md-6 col-xs-6 list">
+					<div id="buttonList" class="col-md-6 col-xs-6 list">
 						{{range .Buttondata}}<button class="btn btn-lg btn-block btn-default" onclick="getCommit('{{.ID}}')">
 							<div class="comCommentText">
 								<label>  {{.Name}}</label>

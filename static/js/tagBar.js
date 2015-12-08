@@ -32,6 +32,20 @@ $('#tagBar').on('itemRemoved', function() {
   refreshQuery();
 });
 
+var compiledButton = _.template('<button class="btn btn-lg btn-block btn-default" onclick="getCommit(\'<%= ID %>\')">  <div class="comCommentText">    <label>  <%= Name %></label>  </div>  <div class="row comDateText">    <div class="col-xs-6 noColStyle pull-left">    <text>  <%= DateString %></text>    </div>    <div class="col-xs-6 noColStyle pull-right noColRight hidden-xs">    <text>  <%= Repository %></text>    </div>  </div></button>');
+var loc = window.location;
+var serversocket = new WebSocket("ws://" + loc.host + loc.pathname + "socket");
+serversocket.onopen = function() {
+  //refreshQuery();
+};
+serversocket.onmessage = function(e) {
+  document.getElementById('buttonList').innerHTML += compiledButton($.parseJSON(e.data));
+};
+
+function deleteButtons() {
+  document.getElementById('buttonList').innerHTML = "";
+}
+
 function refreshQuery() {
   var authors = [];
   var repos = [];
@@ -66,6 +80,7 @@ function refreshQuery() {
   if (repos.length > 0) {
     query = query + '&repo=' + repos.join(';');
   }
+  var strDate = "";
   if (dates.length > 0) {
     var earliestDate = new Date(3000, 1, 1);
     var earliestString = '3000-01-01';
@@ -77,13 +92,21 @@ function refreshQuery() {
         earliestString = dates[i];
       }
     }
-    var strDate = earliestString + 'T00:00:00Z';
+    strDate = earliestString + 'T00:00:00Z';
     query = query + '&since=' + strDate;
   }
+
   query = query.replace('&', '?');
   var oldPath = "." + window.location.href.substring(window.location.href.lastIndexOf("/"));
   if (oldPath != encodeURI(query)) {
     $('#pleaseWaitDialog').modal('show');
     window.location = query;
   }
+  /*var JSONQuery = {
+    author: authors.join(';'),
+    repo: repos.join(';'),
+    date: strDate
+  };
+  deleteButtons();
+  serversocket.send(JSON.stringify(JSONQuery));*/
 }

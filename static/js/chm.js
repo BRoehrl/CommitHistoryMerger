@@ -56,9 +56,11 @@ function loadProfile() {
 }
 
 $("#settings :input").change(function() {
-  $("#saveButton").toggle();
-  $("#profileMenu").toggle();
-  $("#settings").data("changed", true);
+  if (!$("#settings").data("changed")) {
+    $("#saveButton").toggle();
+    $("#profileMenu").toggle();
+    $("#settings").data("changed", true);
+  }
 });
 
 function saveSettings() {
@@ -68,7 +70,7 @@ function saveSettings() {
     var serializedData = $form.serialize();
     $.post('/settings', serializedData);
     // TODO Maybe show modal save dialog
-    }
+  }
 
   $("#saveButton").toggle();
   $("#profileMenu").toggle();

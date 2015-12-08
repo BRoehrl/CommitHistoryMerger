@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 type Page struct {
@@ -75,7 +76,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		queryResult = append(queryResult, commit)
 	}
 	sort.Sort(queryResult)
-	log.Println(len(queryResult))
+	//log.Println(len(queryResult))
 
 	commitData := []Buttondata{}
 	for _, com := range queryResult {
@@ -210,6 +211,45 @@ func ShowSingleCommit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+func SocketHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for {
+		jVars := git.JSONVars{}
+		err := conn.ReadJSON(&jVars)
+		if err != nil {
+			//log.Println("1", err)
+			return
+		}
+		vars := map[string]string{"author": jVars.Author, "repo": jVars.Repo, "date": jVars.Querydate}
+		query := getQueryFromVars(vars)
+		commitChanel := make(chan git.Commit)
+		go processor.SendCommits(query, commitChanel)
+		for com := range commitChanel {
+			formatedDate := com.Time.Format(time.RFC822)[:10]
+			bdata := Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch}
+			err = conn.WriteJSON(bdata)
+			if err != nil {
+				log.Println("2", err)
+				return
+			}
+		}
+		if err != nil {
+			log.Println("3", err)
+			return
+		}
+	}
+}
+
 func CommitShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
@@ -228,24 +268,24 @@ func getQueryFromVars(vars map[string]string) processor.Query {
 
 	query := processor.Query{}
 
-	authors, ok := vars["author"]
-	if ok {
+	authors := vars["author"]
+	if authors != "" {
 		if form, err := url.QueryUnescape(authors); err == nil {
 			authors = form
 		}
 		query.Authors = strings.Split(authors, ";")
 	}
 
-	repos, ok := vars["repo"]
-	if ok {
+	repos := vars["repo"]
+	if repos != "" {
 		if form, err := url.QueryUnescape(repos); err == nil {
 			repos = form
 		}
 		query.Repos = strings.Split(repos, ";")
 	}
 
-	since, ok := vars["date"]
-	if ok {
+	since := vars["date"]
+	if since != "" {
 		if d, err := time.Parse(time.RFC3339, since); err == nil {
 			query.Since = d
 		}

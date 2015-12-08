@@ -24,6 +24,12 @@ type User struct {
 	HtmlURL string `json:"html_url"`
 }
 
+type JSONVars struct {
+	Author    string `json:"author"`
+	Repo      string `json:"repo"`
+	Querydate string `json:"date"`
+}
+
 type JSONCommit struct {
 	Sha          string       `json:"sha"`
 	ActualCommit SimpleCommit `json:"commit"`

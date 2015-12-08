@@ -32,14 +32,23 @@ $('#tagBar').on('itemRemoved', function() {
   refreshQuery();
 });
 
-var compiledButton = _.template('<button class="btn btn-lg btn-block btn-default" onclick="getCommit(\'<%= ID %>\')">  <div class="comCommentText">    <label>  <%= Name %></label>  </div>  <div class="row comDateText">    <div class="col-xs-6 noColStyle pull-left">    <text>  <%= DateString %></text>    </div>    <div class="col-xs-6 noColStyle pull-right noColRight hidden-xs">    <text>  <%= Repository %></text>    </div>  </div></button>');
+var compiledButton = _.template('<% _.each(button_data, function(bd) { %> <button class="btn btn-lg btn-block btn-default" onclick="getCommit(\'<%= bd.ID %>\')" tstamp=<%= bd.NanoTime %> >  <div class="comCommentText">    <label>  <%= bd.Name %></label>  </div>  <div class="row comDateText">    <div class="col-xs-6 noColStyle pull-left">    <text>  <%= bd.DateString %></text>    </div>    <div class="col-xs-6 noColStyle pull-right noColRight hidden-xs">    <text>  <%= bd.Repository %></text>    </div>  </div></button> <% }); %>');
+
 var loc = window.location;
 var serversocket = new WebSocket("ws://" + loc.host + loc.pathname + "socket");
 serversocket.onopen = function() {
   //refreshQuery();
 };
+
+function sortThat(){
+  $("button.btn.btn-lg.btn-block.btn-default").sort(function (prev, next) {
+    return $(next).attr("tstamp").localeCompare($(prev).attr("tstamp"));
+}).appendTo("#buttonList");
+}
+
+
 serversocket.onmessage = function(e) {
-  document.getElementById('buttonList').innerHTML += compiledButton($.parseJSON(e.data));
+    document.getElementById('buttonList').innerHTML += compiledButton({button_data: $.parseJSON(e.data)});
 };
 
 function deleteButtons() {

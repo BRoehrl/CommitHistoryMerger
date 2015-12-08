@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-
-
 var cachedCommits Commits
 var cachedShas map[string]bool
 var cachedAuthors map[string]bool
@@ -80,13 +78,11 @@ func getGitCommits(from, to time.Time) (err error) {
 	return
 }
 
-
 func sendGitCommits(from, to time.Time, allCommits chan git.Commit) {
 	if len(cachedRepos) == 0 {
 		allRepos, _ = git.GetRepositories()
 	}
 	for _, repo := range allRepos {
-		//maybe compute parallel with waitgroup: go repo.SendAllCommitsBetween(from, to, allCommits)
 		git.CommitWaitGroup.Add(1)
 		go repo.SendAllCommitsBetween(from, to, allCommits)
 	}

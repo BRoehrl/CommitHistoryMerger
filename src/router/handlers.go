@@ -39,6 +39,7 @@ type Buttondata struct {
 	ID,
 	DateString,
 	Repository string
+	NanoTime int64
 }
 
 const (
@@ -81,7 +82,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	commitData := []Buttondata{}
 	for _, com := range queryResult {
 		formatedDate := com.Time.Format(time.RFC822)[:10]
-		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch})
+		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch, com.Time.UnixNano()})
 	}
 	page.Buttondata = commitData
 	updatePageData()
@@ -104,7 +105,7 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	}
 	authorButtons := []Buttondata{}
 	for _, author := range processor.GetCachedAuthors() {
-		authorButtons = append(authorButtons, Buttondata{author, author, "", ""})
+		authorButtons = append(authorButtons, Buttondata{author, author, "", "", 0})
 	}
 	updatePageData()
 	templates.ExecuteTemplate(w, "authors.html", page)
@@ -234,13 +235,18 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		query := getQueryFromVars(vars)
 		commitChanel := make(chan git.Commit)
 		go processor.SendCommits(query, commitChanel)
+		buttonBuffer := []Buttondata{}
 		for com := range commitChanel {
 			formatedDate := com.Time.Format(time.RFC822)[:10]
-			bdata := Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch}
-			err = conn.WriteJSON(bdata)
-			if err != nil {
-				log.Println("2", err)
-				return
+			bdata := Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch, com.Time.UnixNano()}
+			buttonBuffer = append(buttonBuffer, bdata)
+			if len(buttonBuffer) > 9 {
+				err = conn.WriteJSON(buttonBuffer)
+				if err != nil {
+					log.Println("2", err)
+					return
+				}
+				buttonBuffer = []Buttondata{}
 			}
 		}
 		if err != nil {

@@ -43,7 +43,7 @@ type Buttondata struct {
 }
 
 const (
-	TITLE = "CHM"
+	TITLE = "CHF"
 )
 
 var page Page
@@ -56,7 +56,7 @@ func updatePageData() {
 	page.Authors = processor.GetCachedAuthors()
 	page.Repos = processor.GetCachedRepos()
 	page.Settings = git.GetConfig()
-	page.SinceDateString = page.Settings.SinceTime.Format(time.RFC3339)[:10]
+	page.SinceDateString = processor.GetCacheTimeString()//page.Settings.SinceTime.Format(time.RFC3339)[:10]
 	page.ActiveProfile = processor.LoadedConfig
 }
 

@@ -4,24 +4,28 @@
 	<div class="section">
 		<div class="container-fluid">
 			<div class="row filterrow">
-				<div class="input-group">
-					<div class="input-group-btn">
-						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-filter"></span> filter <span class="caret"></span></button>
-						<ul class="dropdown-menu">
-							<li><a href="" type="button" data-toggle="modal" data-target="#dialogAuthor">Author</a></li>
-							<li><a href="" type="button" data-toggle="modal" data-target="#dialogRepo">Repository</a></li>
-							<li><a href="" type="button" data-toggle="modal" data-target="#dialogDate">Date</a></li>
-						</ul>
+				<div class="col-xs-6">
+					<div class="input-group">
+						<div class="input-group-btn">
+							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-filter"></span> filter <span class="caret"></span></button>
+							<ul class="dropdown-menu">
+								<li><a href="" type="button" data-toggle="modal" data-target="#dialogAuthor">Author</a></li>
+								<li><a href="" type="button" data-toggle="modal" data-target="#dialogRepo">Repository</a></li>
+								<li><a href="" type="button" data-toggle="modal" data-target="#dialogDate">Date</a></li>
+							</ul>
+						</div>
+						<input type="text" id="tagBar" value="loading..." data-role="tagsinput"/>
 					</div>
-					<input type="text" id="tagBar" value="loading..." data-role="tagsinput"/>
+				</div>
+				<div class="col-xs-6">
+					<h4 class="dateBadge">Cache age: <span class="label label-default">{{.SinceDateString}}</span></h3>
 				</div>
 			</div>
 		</div>
 	</div>
-	<div class="section">
+	<div class="section section-big">
 		<div class="container-fluid">
-			<div class="row">
-				<div data-spy="scroll" data-target="#details" data-offset="12" class="test2">
+			<div class="row max-height">
 					<div id="buttonList" class="col-md-6 col-xs-6 list">
 						{{range .Buttondata}}<button class="btn btn-lg btn-block btn-default" onclick="getCommit('{{.ID}}')">
 							<div class="comCommentText">
@@ -37,7 +41,6 @@
 							</div>
 						</button>{{end}}
 					</div>
-				</div>
 				<div class="col-md-6 col-xs-6 detail">
 					<h1>Commit Details</h1>
 					<div class="form-group">

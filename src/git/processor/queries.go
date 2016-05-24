@@ -152,6 +152,10 @@ func GetSingleCommit(sha string) (singleCommit git.Commit) {
 	return
 }
 
+func GetCacheTimeString() (cacheTimeString string) {
+	return cacheTime.Format(time.RFC3339)[:10];
+}
+
 func GetCachedAuthors() (authors []string) {
 	for key := range cachedAuthors {
 		authors = append(authors, key)

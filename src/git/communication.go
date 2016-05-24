@@ -21,7 +21,7 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 	if err != nil {
 		return
 	}
-	req.Header.Set("Authorization", "Basic "+baseAuthkey)
+	req.Header.Set("Authorization", "token "+baseAuthkey)
 	resp, err = client.Do(req)
 	if err != nil {
 		return

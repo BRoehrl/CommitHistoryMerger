@@ -275,21 +275,6 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// CommitShow handler
-func CommitShow(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	vars := mux.Vars(r)
-
-	query := getQueryFromVars(vars)
-
-	queryResult := processor.GetCommits(query)
-
-	if err := json.NewEncoder(w).Encode(queryResult); err != nil {
-		panic(err)
-	}
-}
-
 func getQueryFromVars(vars map[string]string) processor.Query {
 
 	query := processor.Query{}

@@ -64,7 +64,7 @@ func UnmarshalFromGetResponse(url string, i interface{}) (err error) {
 	return
 }
 
-// GetRepositories returns all or the first 100 repositories of the baseOrganisation.
+// GetRepositories returns all or config.MaxRepos repositories of the baseOrganisation.
 func GetRepositories() (allRepos Repos, err error) {
 	currentPage := 1
 	highestPageNumber := (config.MaxRepos-1)/100 + 1
@@ -127,57 +127,11 @@ func addBranchesToSingleRepo(repo Repo) (r Repo, err error) {
 	return repo, err
 }
 
-// GetCommits returns the 100 newest commits for the specified repository
-func (r Repo) GetCommits() (commits []JSONCommit, err error) {
+// GetNewest100Commits returns the 100 newest commits for the specified repository
+//  Deprecated: GetNewest100Commits
+func (r Repo) GetNewest100Commits() (commits []JSONCommit, err error) {
 	query := config.GitURL + "/repos/" + config.BaseOrganisation + "/" + r.Name + "/commits?per_page=100"
 	err = UnmarshalFromGetResponse(query, &commits)
-	return
-}
-
-// GetFirstNCommits returns the N newest commits for the specified repository.
-// Note that n/100 queries are sent to the server
-func (r Repo) GetFirstNCommits(n int) (commits []JSONCommit, err error) {
-	currentPage := 1
-	for {
-		query := config.GitURL + "/repos/" + config.BaseOrganisation + "/" + r.Name + "/commits?per_page=100&page=" + strconv.Itoa(currentPage)
-		currentPage++
-		var singlePage []JSONCommit
-		err = UnmarshalFromGetResponse(query, &singlePage)
-		commits = append(commits, singlePage...)
-
-		if len(commits) >= n {
-			commits = commits[:n]
-			break
-		}
-		if err != nil || islastPage {
-			break
-		}
-
-	}
-	return
-}
-
-// GetAllCommitsBetween returns all commits commited before Date to and after Date from
-// Note that for each 100 queries a new request is sent
-func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JSONCommit, err error) {
-	currentPage := 1
-	for {
-		query := config.GitURL + "/repos/" + config.BaseOrganisation
-		query += "/" + r.Name
-		query += "/commits?since=" + from.Format(time.RFC3339) + "&until=" + to.Format(time.RFC3339)
-		query += "&sha=" + r.Branches[r.SelectedBranch]
-		query += "&per_page=100&page=" + strconv.Itoa(currentPage)
-
-		currentPage++
-		var singlePage []JSONCommit
-		err = UnmarshalFromGetResponse(query, &singlePage)
-		commits = append(commits, singlePage...)
-
-		if err != nil || islastPage {
-			break
-		}
-
-	}
 	return
 }
 
@@ -217,10 +171,4 @@ func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit) {
 	}
 	CommitWaitGroup.Done()
 	return
-}
-
-// GetAllCommitsUntil returns all commits commited after Date d
-// Note that for each 100 queries a new request is sent
-func (r Repo) GetAllCommitsUntil(d time.Time) (commits []JSONCommit, err error) {
-	return r.GetAllCommitsBetween(time.Now(), d)
 }

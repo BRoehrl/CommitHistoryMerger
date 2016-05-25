@@ -2,7 +2,6 @@ package processor
 
 import (
 	"errors"
-	"fmt"
 	"git"
 	"log"
 	"regexp"
@@ -103,63 +102,6 @@ func keepCommit(query Query, commit git.Commit) bool {
 		}
 	}
 	return keep
-}
-
-// GetCommits returns all Commits matching the query
-func GetCommits(query Query) (commits Commits) {
-	commits = Commits{}
-	if updateCommits || updateAll {
-		flushCommitCache()
-		updateCommits = false
-		if updateAll {
-			flushRepos()
-		}
-		updateAll = false
-	}
-	// if no date set use default Date
-	if query.Since.Equal(time.Time{}) {
-		query.Since = git.GetConfig().SinceTime
-	}
-	if query.Since.Before(cacheTime) {
-		err := getGitCommits(query.Since, cacheTime)
-		if err != nil {
-			fmt.Println(err)
-		}
-		cacheTime = query.Since
-	}
-	for _, commit := range cachedCommits {
-		keep := true
-		if len(query.Authors) != 0 {
-			keep = false
-			for _, author := range query.Authors {
-				if commit.Author == author {
-					keep = true
-				}
-			}
-		}
-
-		if keep {
-			if len(query.Repos) != 0 {
-				keep = false
-				for _, repo := range query.Repos {
-					if commit.Repo == repo {
-						keep = true
-					}
-				}
-			}
-		}
-
-		if keep {
-			if commit.Time.Before(query.Since) {
-				keep = false
-			}
-		}
-
-		if keep {
-			commits = append(commits, commit)
-		}
-	}
-	return
 }
 
 // GetSingleCommit returns the commit with sha

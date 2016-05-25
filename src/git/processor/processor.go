@@ -51,35 +51,6 @@ func flushRepos() {
 	cachedRepos = make(map[string]bool)
 }
 
-func getGitCommits(from, to time.Time) (err error) {
-	if len(cachedRepos) == 0 {
-		allRepos, err = git.GetRepositories()
-	}
-	if err != nil {
-		return
-	}
-	for _, repo := range allRepos {
-		singleRepoCommits, err := repo.GetAllCommitsBetween(from, to)
-		if err != nil {
-			return err
-		}
-		for _, gitCom := range singleRepoCommits {
-			newCommit := git.Commit{
-				Sha:         gitCom.Sha,
-				Repo:        repo.Name,
-				Branch:      repo.SelectedBranch,
-				Author:      gitCom.ActualCommit.Author.Name,
-				CreatorLink: gitCom.Author.HtmlURL,
-				Link:        gitCom.HtmlURL,
-				Comment:     gitCom.ActualCommit.Message,
-				Time:        gitCom.ActualCommit.Author.Date,
-			}
-			addSingleCommitToCache(newCommit, false)
-		}
-	}
-	sort.Sort(cachedCommits)
-	return
-}
 
 func sendGitCommits(from, to time.Time, allCommits chan git.Commit) {
 	if len(cachedRepos) == 0 {

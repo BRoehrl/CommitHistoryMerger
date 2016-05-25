@@ -90,22 +90,6 @@ var routes = Routes{
 		RepoBranchChange,
 	},
 	Route{
-		"CommitShow",
-		"GET",
-		"/json/commits",
-		[][]string{
-			[]string{"author", "{author}", "repo", "{repo}", "since", "{date}"},
-			[]string{"author", "{author}", "repo", "{repo}"},
-			[]string{"author", "{author}", "since", "{date}"},
-			[]string{"repo", "{repo}", "since", "{date}"},
-			[]string{"author", "{author}"},
-			[]string{"repo", "{repo}"},
-			[]string{"since", "{date}"},
-			nil,
-		},
-		CommitShow,
-	},
-	Route{
 		"SingleCommit",
 		"GET",
 		"/json/commits/{sha}",

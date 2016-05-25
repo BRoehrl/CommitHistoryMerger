@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// A Query to the Backend
 type Query struct {
 	Authors  []string
 	Repos    []string
@@ -19,6 +20,7 @@ type Query struct {
 
 var updateCommits, updateAll bool
 
+// SendCommits sends all commits matching the query to a supplied channel
 func SendCommits(query Query, commits chan git.Commit) {
 
 	if updateCommits || updateAll {
@@ -103,6 +105,7 @@ func keepCommit(query Query, commit git.Commit) bool {
 	return keep
 }
 
+// GetCommits returns all Commits matching the query
 func GetCommits(query Query) (commits Commits) {
 	commits = Commits{}
 	if updateCommits || updateAll {
@@ -159,6 +162,7 @@ func GetCommits(query Query) (commits Commits) {
 	return
 }
 
+// GetSingleCommit returns the commit with sha
 func GetSingleCommit(sha string) (singleCommit git.Commit) {
 	if !cachedShas[sha] {
 		return
@@ -172,10 +176,12 @@ func GetSingleCommit(sha string) (singleCommit git.Commit) {
 	return
 }
 
+// GetCacheTimeString returns the earliest date for which the commits are cached as a string
 func GetCacheTimeString() (cacheTimeString string) {
 	return cacheTime.Format(time.RFC3339)[:10]
 }
 
+// GetCachedAuthors returns all cached authornames
 func GetCachedAuthors() (authors []string) {
 	for key := range cachedAuthors {
 		authors = append(authors, key)
@@ -183,6 +189,8 @@ func GetCachedAuthors() (authors []string) {
 	sort.Strings(authors)
 	return
 }
+
+// GetCachedRepos returns all cached repositorynames
 func GetCachedRepos() (repos []string) {
 	for key := range cachedRepos {
 		repos = append(repos, key)
@@ -190,6 +198,8 @@ func GetCachedRepos() (repos []string) {
 	sort.Strings(repos)
 	return
 }
+
+// GetCachedRepoObjects returns all cached repositories
 func GetCachedRepoObjects() (repos git.Repos, err error) {
 	if len(cachedRepos) == 0 {
 		allRepos, err = git.GetRepositories()
@@ -200,6 +210,7 @@ func GetCachedRepoObjects() (repos git.Repos, err error) {
 	return allRepos, err
 }
 
+// SetRepoBranch sets the branch of a repository
 func SetRepoBranch(repoName, branchName string) (err error) {
 	if !cachedRepos[repoName] {
 		return errors.New("Repository not found/cached: " + repoName)
@@ -222,6 +233,7 @@ func SetRepoBranch(repoName, branchName string) (err error) {
 	return errors.New("Repository found, but not in allRepos: " + repoName)
 }
 
+// UpdateDefaultBranch sets the Branch of all repositories to the default branch from the config.
 func UpdateDefaultBranch() {
 	defaultBranch := git.GetConfig().MiscDefaultBranch
 	for i, repo := range allRepos {
@@ -232,6 +244,7 @@ func UpdateDefaultBranch() {
 	}
 }
 
+// SetConfig sets the config and updates the default branch if necessary
 func SetConfig(config git.Config) {
 	completeUpdate, miscBranchChanged := git.SetConfig(config)
 	updateAll = completeUpdate
@@ -241,6 +254,7 @@ func SetConfig(config git.Config) {
 	}
 }
 
+// GetSavedConfigs returns all saved configfilenames
 func GetSavedConfigs() (fileNames []string) {
 	fileNames, err := getSavedConfigs()
 	if err != nil {

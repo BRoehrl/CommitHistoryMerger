@@ -10,8 +10,13 @@ import (
 	"time"
 )
 
+// RateLimit is the RateLimit for GitHub API queries
 var RateLimit int
+
+// RateLimitRemaining is the number of request remaining until the next ratelimit reset
 var RateLimitRemaining int
+
+// RateLimitReset is the time left until the next ratelimit reset
 var RateLimitReset int
 var islastPage bool
 
@@ -43,6 +48,8 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 	return
 }
 
+// UnmarshalFromGetResponse unmarshals the json response of a git api call
+// into an interface i
 func UnmarshalFromGetResponse(url string, i interface{}) (err error) {
 	resp, err := getResponse(url, config.GitAuthkey)
 	if err != nil {
@@ -79,6 +86,7 @@ func GetRepositories() (allRepos Repos, err error) {
 	return
 }
 
+// AddBranchesToRepos adds to each Repository its branches
 func AddBranchesToRepos(allRepos Repos) (reposWithBranches Repos, err error) {
 	for _, repo := range allRepos {
 		repo, err = addBranchesToSingleRepo(repo)
@@ -127,7 +135,7 @@ func (r Repo) GetCommits() (commits []JSONCommit, err error) {
 }
 
 // GetFirstNCommits returns the N newest commits for the specified repository.
-// Note that n/100 querries are sent to the server
+// Note that n/100 queries are sent to the server
 func (r Repo) GetFirstNCommits(n int) (commits []JSONCommit, err error) {
 	currentPage := 1
 	for {
@@ -150,7 +158,7 @@ func (r Repo) GetFirstNCommits(n int) (commits []JSONCommit, err error) {
 }
 
 // GetAllCommitsBetween returns all commits commited before Date to and after Date from
-// Note that for each 100 querries a new request is sent
+// Note that for each 100 queries a new request is sent
 func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JSONCommit, err error) {
 	currentPage := 1
 	for {
@@ -173,8 +181,10 @@ func (r Repo) GetAllCommitsBetween(from, to time.Time) (commits []JSONCommit, er
 	return
 }
 
+// CommitWaitGroup is a WaitGroup for sending commits via SendAllCommitsBetween
 var CommitWaitGroup sync.WaitGroup
 
+// SendAllCommitsBetween sends all commits of repo r between times from and to the the supplied channel
 func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit) {
 	currentPage := 1
 	for {
@@ -209,7 +219,7 @@ func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit) {
 }
 
 // GetAllCommitsUntil returns all commits commited after Date d
-// Note that for each 100 querries a new request is sent
+// Note that for each 100 queries a new request is sent
 func (r Repo) GetAllCommitsUntil(d time.Time) (commits []JSONCommit, err error) {
 	return r.GetAllCommitsBetween(time.Now(), d)
 }

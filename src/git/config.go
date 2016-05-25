@@ -20,16 +20,21 @@ func init() {
 	config.SinceTime = time.Now().AddDate(0, -2, 0)
 }
 
+// Config contains all settings which can be saved
 type Config struct {
 	GitURL, BaseOrganisation, GitAuthkey, MiscDefaultBranch string
 	MaxRepos, MaxBranches                                   int
 	SinceTime                                               time.Time
 }
 
+// GetConfig returns the current config
 func GetConfig() Config {
 	return config
 }
 
+// SetConfig updates the current Config to connData.
+// The return values indicate if the default Branch changed
+// and if all Data must be reloaded to use the updated Settings
 func SetConfig(connData Config) (updateAll, miscBranchChanged bool) {
 	if connData.GitURL != "" && connData.GitURL != config.GitURL {
 		config.GitURL = connData.GitURL

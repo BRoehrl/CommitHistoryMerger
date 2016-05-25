@@ -1,7 +1,6 @@
 package router
 
 import (
-	"bytes"
 	"fmt"
 	"git"
 	"log"
@@ -9,13 +8,7 @@ import (
 	"time"
 )
 
-var LogBuffer *bytes.Buffer
-
-/*func init() {
-	LogBuffer = new(bytes.Buffer)
-	log.SetOutput(LogBuffer)
-}*/
-
+// Logger wraps a log output around a http handler
 func Logger(inner http.Handler, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

@@ -18,8 +18,10 @@ var cachedRepos map[string]bool
 var cacheTime time.Time
 var allRepos git.Repos
 
+// LoadedConfig is the name of the loaded config
 var LoadedConfig string
 
+// Commits is a sortable slice of git.Commits
 type Commits []git.Commit
 
 func (c Commits) Len() int {
@@ -119,6 +121,7 @@ type completeConfig struct {
 	SelectedBranches map[string]string
 }
 
+// SaveCompleteConfig saves the current config as a file
 func SaveCompleteConfig(fileName string) error {
 	baseConfig := git.GetConfig()
 	selectedBranches := make(map[string]string)
@@ -142,6 +145,7 @@ func getSavedConfigs() (fileNames []string, err error) {
 	return file.Readdirnames(0)
 }
 
+// LoadCompleteConfig loads a config-file
 func LoadCompleteConfig(fileName string) (err error) {
 	file, err := os.Open("configs/" + fileName)
 	if err != nil {

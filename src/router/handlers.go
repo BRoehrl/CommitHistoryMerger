@@ -18,6 +18,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Page contains all data needed to Render the HTML files
 type Page struct {
 	Title,
 	SinceDateString,
@@ -29,11 +30,15 @@ type Page struct {
 	Authors,
 	Repos []string
 }
+
+// Repodata contains data for rendering the repository list
 type Repodata struct {
 	Name       string
 	Branches   []string
 	NrBranches int
 }
+
+// Buttondata contains data for rendering the commit button list
 type Buttondata struct {
 	Name,
 	ID,
@@ -43,6 +48,7 @@ type Buttondata struct {
 }
 
 const (
+	// TITLE is the title of the index page
 	TITLE = "CHF"
 )
 
@@ -56,10 +62,11 @@ func updatePageData() {
 	page.Authors = processor.GetCachedAuthors()
 	page.Repos = processor.GetCachedRepos()
 	page.Settings = git.GetConfig()
-	page.SinceDateString = processor.GetCacheTimeString()//page.Settings.SinceTime.Format(time.RFC3339)[:10]
+	page.SinceDateString = processor.GetCacheTimeString() //page.Settings.SinceTime.Format(time.RFC3339)[:10]
 	page.ActiveProfile = processor.LoadedConfig
 }
 
+// Index handler
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
@@ -89,6 +96,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "commits.html", page)
 }
 
+// AuthorsShowJSON handler
 func AuthorsShowJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
@@ -97,6 +105,7 @@ func AuthorsShowJSON(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// AuthorsShow handler
 func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 	err := r.ParseForm()
@@ -111,6 +120,7 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "authors.html", page)
 }
 
+// SettingsShow handler
 func SettingsShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
@@ -122,6 +132,7 @@ func SettingsShow(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "settings.html", page)
 }
 
+// SettingsPost handler
 func SettingsPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
@@ -136,6 +147,7 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "settings.html", page)
 }
 
+// SaveProfile handler
 func SaveProfile(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -145,6 +157,7 @@ func SaveProfile(w http.ResponseWriter, r *http.Request) {
 	processor.SaveCompleteConfig(vars["name"])
 }
 
+// LoadProfile handler
 func LoadProfile(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -154,6 +167,7 @@ func LoadProfile(w http.ResponseWriter, r *http.Request) {
 	processor.LoadCompleteConfig(vars["name"])
 }
 
+// ReposShowHTML handler
 func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
@@ -180,6 +194,8 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 	page.RepoData = repodata
 	templates.ExecuteTemplate(w, "repositories.html", page)
 }
+
+// RepoBranchChange handler
 func RepoBranchChange(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -190,6 +206,7 @@ func RepoBranchChange(w http.ResponseWriter, r *http.Request) {
 	processor.SetRepoBranch(repo, branch)
 }
 
+// ReposShow handler
 func ReposShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
@@ -199,6 +216,7 @@ func ReposShow(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ShowSingleCommit handler
 func ShowSingleCommit(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
@@ -217,6 +235,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// SocketHandler handler
 func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -256,6 +275,7 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// CommitShow handler
 func CommitShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)

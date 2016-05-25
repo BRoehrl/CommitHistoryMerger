@@ -50,6 +50,7 @@ type Commit struct {
 	Repo,
 	Branch,
 	Author,
+	CreatorLink,
 	Link,
 	Comment string
 	Time time.Time

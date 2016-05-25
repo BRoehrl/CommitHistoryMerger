@@ -65,13 +65,14 @@ func getGitCommits(from, to time.Time) (err error) {
 		}
 		for _, gitCom := range singleRepoCommits {
 			newCommit := git.Commit{
-				Sha:     gitCom.Sha,
-				Repo:    repo.Name,
-				Branch:  repo.SelectedBranch,
-				Author:  gitCom.ActualCommit.Author.Name,
-				Link:    gitCom.HtmlURL,
-				Comment: gitCom.ActualCommit.Message,
-				Time:    gitCom.ActualCommit.Author.Date,
+				Sha:         gitCom.Sha,
+				Repo:        repo.Name,
+				Branch:      repo.SelectedBranch,
+				Author:      gitCom.ActualCommit.Author.Name,
+				CreatorLink: gitCom.Author.HtmlURL,
+				Link:        gitCom.HtmlURL,
+				Comment:     gitCom.ActualCommit.Message,
+				Time:        gitCom.ActualCommit.Author.Date,
 			}
 			addSingleCommitToCache(newCommit, false)
 		}

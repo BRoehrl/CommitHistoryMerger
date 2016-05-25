@@ -199,13 +199,14 @@ func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit) {
 		err := UnmarshalFromGetResponse(query, &singlePage)
 		for _, gitCom := range singlePage {
 			newCommit := Commit{
-				Sha:     gitCom.Sha,
-				Repo:    r.Name,
-				Branch:  r.SelectedBranch,
-				Author:  gitCom.ActualCommit.Author.Name,
-				Link:    gitCom.HtmlURL,
-				Comment: gitCom.ActualCommit.Message,
-				Time:    gitCom.ActualCommit.Author.Date,
+				Sha:         gitCom.Sha,
+				Repo:        r.Name,
+				Branch:      r.SelectedBranch,
+				Author:      gitCom.ActualCommit.Author.Name,
+				CreatorLink: gitCom.Author.HtmlURL,
+				Link:        gitCom.HtmlURL,
+				Comment:     gitCom.ActualCommit.Message,
+				Time:        gitCom.ActualCommit.Author.Date,
 			}
 			allComits <- newCommit
 		}

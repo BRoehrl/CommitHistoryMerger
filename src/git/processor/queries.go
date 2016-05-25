@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"git"
 	"log"
+	"regexp"
 	"sort"
 	"time"
 )
 
 type Query struct {
-	Authors []string
-	Repos   []string
-	Since   time.Time
+	Authors  []string
+	Repos    []string
+	Since    time.Time
+	UseRegex bool
 }
 
 var updateCommits, updateAll bool
@@ -55,12 +57,27 @@ func SendCommits(query Query, commits chan git.Commit) {
 }
 
 func keepCommit(query Query, commit git.Commit) bool {
+
 	keep := true
-	if len(query.Authors) != 0 {
+	if commit.Time.Before(query.Since) {
 		keep = false
-		for _, author := range query.Authors {
-			if commit.Author == author || author == "" {
-				keep = true
+	}
+
+	if keep {
+		if len(query.Authors) != 0 {
+			keep = false
+			for _, author := range query.Authors {
+				if commit.Author == author || author == "" {
+					keep = true
+					break
+				}
+				if query.UseRegex {
+					matched, _ := regexp.MatchString(author, commit.Author)
+					if matched {
+						keep = true
+						break
+					}
+				}
 			}
 		}
 	}
@@ -71,13 +88,16 @@ func keepCommit(query Query, commit git.Commit) bool {
 			for _, repo := range query.Repos {
 				if commit.Repo == repo || repo == "" {
 					keep = true
+					break
+				}
+				if query.UseRegex {
+					matched, _ := regexp.MatchString(repo, commit.Repo)
+					if matched {
+						keep = true
+						break
+					}
 				}
 			}
-		}
-	}
-	if keep {
-		if commit.Time.Before(query.Since) {
-			keep = false
 		}
 	}
 	return keep
@@ -153,7 +173,7 @@ func GetSingleCommit(sha string) (singleCommit git.Commit) {
 }
 
 func GetCacheTimeString() (cacheTimeString string) {
-	return cacheTime.Format(time.RFC3339)[:10];
+	return cacheTime.Format(time.RFC3339)[:10]
 }
 
 func GetCachedAuthors() (authors []string) {

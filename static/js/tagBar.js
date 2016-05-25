@@ -67,14 +67,14 @@ function refreshQuery() {
     var wholeTag = items[i];
     var type = wholeTag.substring(0, wholeTag.indexOf(":"));
     var tag = wholeTag.substring(wholeTag.indexOf(":") + 1);
-    switch (type) {
-      case 'Author':
+    switch (type.toLowerCase()) {
+      case 'author':
         authors.push(tag);
         break;
-      case 'Repo':
+      case 'repo':
         repos.push(tag);
         break;
-      case 'Since':
+      case 'since':
         dates.push(tag);
         break;
       default:

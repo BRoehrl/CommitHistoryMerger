@@ -296,6 +296,9 @@ func getQueryFromVars(vars map[string]string) processor.Query {
 			query.Since = d
 		}
 	}
+
+	query.UseRegex = true
+
 	return query
 }
 

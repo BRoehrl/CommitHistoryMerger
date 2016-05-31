@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -73,7 +74,7 @@ func keepCommit(query Query, commit git.Commit) bool {
 					break
 				}
 				if query.UseRegex {
-					matched, _ := regexp.MatchString(author, commit.Author)
+					matched, _ := regexp.MatchString(strings.ToLower(author), strings.ToLower(commit.Author))
 					if matched {
 						keep = true
 						break
@@ -92,7 +93,7 @@ func keepCommit(query Query, commit git.Commit) bool {
 					break
 				}
 				if query.UseRegex {
-					matched, _ := regexp.MatchString(repo, commit.Repo)
+					matched, _ := regexp.MatchString(strings.ToLower(repo), strings.ToLower(commit.Repo))
 					if matched {
 						keep = true
 						break

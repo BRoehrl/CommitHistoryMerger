@@ -32,7 +32,20 @@ $('#tagBar').on('itemRemoved', function() {
     refreshQuery();
 });
 
-var compiledButton = _.template('<% _.each(button_data, function(bd) { %> <button class="btn btn-lg btn-block btn-default" onclick="getCommit(\'<%= bd.ID %>\')" tstamp=<%= bd.NanoTime %> >  <div class="comCommentText">    <label>  <%= bd.Name %></label>  </div>  <div class="row comDateText">    <div class="col-xs-6 noColStyle pull-left">    <text>  <%= bd.DateString %></text>    </div>    <div class="col-xs-6 noColStyle pull-right noColRight hidden-xs">    <text>  <%= bd.Repository %></text>    </div>  </div></button> <% }); %>');
+var compiledButton = _.template('<% _.each(button_data, function(bd) { %>\
+  <button class="btn btn-lg btn-block btn-default" onclick="getCommit(\'<%= bd.ID %>\')" tstamp=<%= bd.NanoTime %> >\
+    <div class="comCommentText">\
+        <label>  <%= bd.Name %></label>\
+    </div>\
+    <div class="row comDateText">\
+      <div class="col-xs-6 noColStyle pull-left">\
+          <text>  <%= bd.DateString %></text>\
+      </div>\
+      <div class="col-xs-6 noColStyle pull-right noColRight hidden-xs">\
+          <text>  <%= bd.Repository %></text>\
+      </div>\
+    </div>\
+  </button> <% }); %>');
 
 var loc = window.location;
 var serversocket = new WebSocket("ws://" + loc.host + "/socket");
@@ -109,17 +122,25 @@ function refreshQuery() {
         query = query + '&since=' + strDate;
     }
 
+    var params = {
+        'author': authors.join(';'),
+        'repo': repos.join(';'),
+        'date': strDate
+    };
+    $.post('./commits', params, function(data, textStatus) {
+        document.getElementById('buttonList').innerHTML = compiledButton({
+            button_data: data
+        });
+    }, "json");
+
     query = query.replace('&', '?');
     var oldPath = "." + window.location.href.substring(window.location.href.lastIndexOf("/"));
     if (oldPath != encodeURI(query)) {
-        $('#pleaseWaitDialog').modal('show');
-        window.location = query;
+        window.history.pushState({
+            "html": window.html,
+            "pageTitle": window.pageTitle
+        }, "", query);
+        //$('#pleaseWaitDialog').modal('show');
+        //window.location = query;
     }
-    /*var JSONQuery = {
-      author: authors.join(';'),
-      repo: repos.join(';'),
-      date: strDate
-    };
-    deleteButtons();
-    serversocket.send(JSON.stringify(JSONQuery));*/
 }

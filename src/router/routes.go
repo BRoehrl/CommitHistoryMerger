@@ -90,6 +90,13 @@ var routes = Routes{
 		RepoBranchChange,
 	},
 	Route{
+		"CommitsShowJSON",
+		"POST",
+		"/commits",
+		nil,
+		CommitsShowJSON,
+	},
+	Route{
 		"SingleCommit",
 		"GET",
 		"/json/commits/{sha}",

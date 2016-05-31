@@ -96,6 +96,32 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "commits.html", page)
 }
 
+// CommitsShowJSON handler
+func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	vars := map[string]string{"author": r.FormValue("author"), "repo": r.FormValue("repo"), "date": r.FormValue("date")}
+	query := getQueryFromVars(vars)
+
+	queryResult := processor.Commits{}
+	commitChanel := make(chan git.Commit)
+	go processor.SendCommits(query, commitChanel)
+	for commit := range commitChanel {
+		queryResult = append(queryResult, commit)
+	}
+	sort.Sort(queryResult)
+
+	commitData := []Buttondata{}
+	for _, com := range queryResult {
+		formatedDate := com.Time.Format(time.RFC822)[:10]
+		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch, com.Time.UnixNano()})
+	}
+	if err := json.NewEncoder(w).Encode(commitData); err != nil {
+		panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+
 // AuthorsShowJSON handler
 func AuthorsShowJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")

@@ -14,7 +14,7 @@ function saveSettings() {
         $.post('/settings', serializedData);
         showSaveSuccessAlert();
         $("#settings").data("changed", false);
-      }
+    }
 
     $("#saveButton").toggle();
     $("#profileMenu").toggle();

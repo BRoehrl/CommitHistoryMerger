@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-{{template "headAndNavbar.html" .}}
-	<div class="alert alert-success" id="save-success" hidden>
-		<strong>Success!</strong>
-		The settings have been updated.
-	</div>
+	{{template "headAndNavbar.html" .}}
+		<div class="alert alert-success" id="save-success" hidden>
+			<strong>Success!</strong> The settings have been updated.
+		</div>
 		<form method="POST" id="settings" class="settingsForm">
 			<div class="container">
 				<h2 class="row" style="">Base Settings</h2>
@@ -29,7 +28,8 @@
 				<h4 class="row">Max number of Repositories<input type="number" min="100" step="100" class="form-control" id="maxRepos" name="maxRepos" value="{{.Settings.MaxRepos}}"></h4>
 			</div>
 		</form>
-	{{template "scripts.html" .}}
-	<script src="static/js/settings.js"></script>
+		{{template "scripts.html" .}}
+		<script src="static/js/settings.js"></script>
 	</body>
+
 </html>

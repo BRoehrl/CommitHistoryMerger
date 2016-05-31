@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-	{{template "headAndNavbar.html" .}}
+{{template "headAndNavbar.html" .}}
+	<div class="alert alert-success" id="save-success" hidden>
+		<strong>Success!</strong>
+		The settings have been updated.
+	</div>
 		<form method="POST" id="settings" class="settingsForm">
 			<div class="container">
 				<h2 class="row" style="">Base Settings</h2>

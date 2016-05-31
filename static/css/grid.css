@@ -147,3 +147,11 @@ h2{
   right: 50px;
   background-color: #337ab7;
 }
+
+.alert-success {
+    position: fixed;
+    top: 56px;
+    text-align: center;
+    left: 50%;
+    transform: translateX(-50%);
+}

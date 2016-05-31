@@ -6,6 +6,14 @@
 			<div class="row filterrow">
 				<div class="col-xs-6">
 					<div class="input-group">
+						<input id="searchBar" type="text" class="form-control" placeholder="Search for..."/>
+						<span class="input-group-btn">
+							<button class="btn btn-secondary" type="button"><span class="glyphicon glyphicon-search"></span></button>
+						</span>
+					</div>
+				</div>
+				<div class="col-xs-6">
+					<div class="input-group eigthy-percent">
 						<div class="input-group-btn">
 							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-filter"></span> filter <span class="caret"></span></button>
 							<ul class="dropdown-menu">
@@ -16,8 +24,6 @@
 						</div>
 						<input type="text" id="tagBar" value="loading..." data-role="tagsinput"/>
 					</div>
-				</div>
-				<div class="col-xs-6">
 					<h4 class="dateBadge">Cache age: <span class="label label-default">{{.SinceDateString}}</span></h3>
 				</div>
 			</div>

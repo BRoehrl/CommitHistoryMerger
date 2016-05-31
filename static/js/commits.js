@@ -52,4 +52,18 @@ function bindScroll() {
         loadMore();
     }
 }
+
+function searchCommits(e){
+  var searchText = $( '#searchBar' ).val().toLowerCase();
+  $("#buttonList").children('button').each(function ( index ){
+    var labelText = $( this ).find('div > label').text().toLowerCase();
+    if (labelText.indexOf(searchText) === -1){
+      $( this ).hide();
+    }else {
+      $( this ).show();
+    }
+  });
+}
+
+document.getElementById('searchBar').oninput = searchCommits;
 $("#buttonList").scroll(bindScroll);

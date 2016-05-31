@@ -8,6 +8,7 @@ body {
 .dateBadge {
     color: whitesmoke;
     position: absolute;
+    max-width: 20%;
     right: 2px;
     bottom: 0;
 }
@@ -93,10 +94,6 @@ hr {
     text-align: left;
     color: teal;
 }
-.bootstrap-tagsinput {
-    margin-top: 10px;
-    height: 34px;
-}
 .dropdown {
     height: 12px;
 }
@@ -127,4 +124,7 @@ h2 {
     text-align: center;
     left: 50%;
     transform: translateX(-50%);
+}
+.eigthy-percent {
+    width: 80%;
 }

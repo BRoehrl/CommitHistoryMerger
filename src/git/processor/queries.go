@@ -12,6 +12,7 @@ import (
 
 // A Query to the Backend
 type Query struct {
+	Commit   string
 	Authors  []string
 	Repos    []string
 	Since    time.Time
@@ -102,6 +103,16 @@ func keepCommit(query Query, commit git.Commit) bool {
 			}
 		}
 	}
+
+	if keep {
+		keep = false
+		if commit.Comment == query.Commit || query.Commit == "" {
+			keep = true
+		}else if query.UseRegex {
+			keep, _ = regexp.MatchString(strings.ToLower(query.Commit), strings.ToLower(commit.Comment))
+		}
+	}
+
 	return keep
 }
 

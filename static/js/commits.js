@@ -1,3 +1,152 @@
+var isLoading = false;
+window.onload = function() {
+    if ($('#tagBar').length) {
+        var tags = sessionStorage.getItem('tags');
+        if (tags !== null) {
+            isLoading = true;
+            $('#tagBar').val(tags);
+            var tagArray = tags.split(",");
+            for (var i = 0; i < tagArray.length; i++) {
+                $('#tagBar').tagsinput('add', tagArray[i]);
+            }
+            isLoading = false;
+            refreshQuery();
+        } else {
+            refreshQuery();
+        }
+    }
+};
+
+$('#tagBar').on('beforeItemAdd', function(event) {
+    if (event.item.indexOf(':') == -1) {
+        event.cancel = true;
+        return;
+    }
+});
+
+$('#tagBar').on('itemAdded', function() {
+    sessionStorage.setItem('tags', $('#tagBar').val());
+    if (!isLoading) refreshQuery();
+});
+
+$('#tagBar').on('itemRemoved', function() {
+    sessionStorage.setItem('tags', $('#tagBar').val());
+    refreshQuery();
+});
+
+var compiledButton = _.template('<% _.each(button_data, function(bd) { %>\
+  <button class="btn btn-lg btn-block btn-default" onclick="getCommit(\'<%= bd.ID %>\')" tstamp=<%= bd.NanoTime %> >\
+    <div class="comCommentText">\
+        <label>  <%= bd.Name %></label>\
+    </div>\
+    <div class="row comDateText">\
+      <div class="col-xs-6 noColStyle pull-left">\
+          <text>  <%= bd.DateString %></text>\
+      </div>\
+      <div class="col-xs-6 noColStyle pull-right noColRight hidden-xs">\
+          <text>  <%= bd.Repository %></text>\
+      </div>\
+    </div>\
+  </button> <% }); %>');
+
+var loc = window.location;
+var serversocket = new WebSocket("ws://" + loc.host + "/socket");
+serversocket.onopen = function() {
+    //refreshQuery();
+};
+
+function sortThat() {
+    $("button.btn.btn-lg.btn-block.btn-default").sort(function(prev, next) {
+        return $(next).attr("tstamp").localeCompare($(prev).attr("tstamp"));
+    }).appendTo("#buttonList");
+}
+
+
+serversocket.onmessage = function(e) {
+    console.log(e);
+    if (loc.pathname !== "/") return;
+    document.getElementById('buttonList').innerHTML += compiledButton({
+        button_data: $.parseJSON(e.data)
+    });
+};
+
+function deleteButtons() {
+    document.getElementById('buttonList').innerHTML = "";
+}
+
+
+var searchBarValue = $('#searchBar').val().toLowerCase();
+var authors = [];
+var repos = [];
+var dates = [];
+var strDate = '';
+var latestPage = 1;
+
+function refreshQuery() {
+    var i;
+    authors = [];
+    repos = [];
+    dates = [];
+    var items = $('#tagBar').tagsinput('items');
+    var arrayLength = items.length;
+    for (i = 0; i < arrayLength; i++) {
+        var wholeTag = items[i];
+        var type = wholeTag.substring(0, wholeTag.indexOf(":"));
+        var tag = wholeTag.substring(wholeTag.indexOf(":") + 1);
+        switch (type.toLowerCase()) {
+            case 'author':
+                authors.push(tag);
+                break;
+            case 'repo':
+                repos.push(tag);
+                break;
+            case 'since':
+                dates.push(tag);
+                break;
+            default:
+                return;
+        }
+    }
+
+    var query = './';
+    if (authors.length > 0) {
+        query = query + '&author=' + authors.join(';');
+    }
+    if (repos.length > 0) {
+        query = query + '&repo=' + repos.join(';');
+    }
+    strDate = "";
+    if (dates.length > 0) {
+        var earliestDate = new Date(3000, 1, 1);
+        var earliestString = '3000-01-01';
+        for (i = 0; i < dates.length; i++) {
+            var dateParts = dates[i].split("-");
+            var date = new Date(dateParts[0], (dateParts[1] - 1), dateParts[2]);
+            if (date <= earliestDate) {
+                earliestDate = date;
+                earliestString = dates[i];
+            }
+        }
+        strDate = earliestString + 'T00:00:00Z';
+        query = query + '&since=' + strDate;
+    }
+    deleteButtons();
+    postQueryAndAddButtons({
+        'page': 1
+    });
+
+    query = query.replace('&', '?');
+    var oldPath = "." + window.location.href.substring(window.location.href.lastIndexOf("/"));
+    if (oldPath != encodeURI(query)) {
+        window.history.pushState({
+            "html": window.html,
+            "pageTitle": window.pageTitle
+        }, "", query);
+        //$('#pleaseWaitDialog').modal('show');
+        //window.location = query;
+    }
+}
+
 function getCommit(id) {
     $.getJSON('./json/commits/' + id, function(data) {
         document.getElementById("message").innerHTML = data.Comment;
@@ -38,32 +187,54 @@ function sendTag(tagType) {
 
 }
 
+function postQueryAndAddButtons(pagination, callbackFunction) {
+    var params = {
+        'commit': searchBarValue,
+        'author': authors.join(';'),
+        'repo': repos.join(';'),
+        'date': strDate,
+        'page': pagination.page,
+        'perPage': 30,
+    };
+    $.ajax({
+        type: 'POST',
+        url: './commits',
+        data: params,
+        success: function(data, textStatus) {
+            document.getElementById('buttonList').innerHTML += compiledButton({
+                button_data: data
+            });
+            latestPage = pagination.page;
+            if (callbackFunction) callbackFunction();
+        },
+        dataType: "json",
+        async: true
+    });
+}
+
 function loadMore() {
     console.log("More loaded");
-    //$("#buttonList").append("<button class=\"btn btn-lg btn-block btn-default\" onclick=\"getCommit('3d19fac3d87f2e51328fa972446e3d21e12f2043')\"><div class=\"comCommentText\"><label>  Updating develop poms back to pre merge state</label>				</div>				<div class=\"row comDateText\"> <div class=\"col-xs-6 noColStyle pull-left\"> <text>  30 May 16 </text></div> <div class=\"col-xs-6 noColStyle pull-right noColRight hidden-xs\"><text>ingrid-portal/develop</text></div></div></button>");
-    $("#buttonList").bind('scroll', bindScroll);
+    postQueryAndAddButtons({
+        'page': latestPage + 1
+    }, function() {
+        $("#buttonList").bind('scroll', bindScroll);
+    });
 }
 
 function bindScroll() {
     var vertical_margin = 30;
-    var loadMore_treshhold = 2000;
+    var loadMore_treshhold = 500;
     if ($("#buttonList").scrollTop() + $("#buttonList").height() + vertical_margin > $("#buttonList")[0].scrollHeight - loadMore_treshhold) {
         $("#buttonList").unbind('scroll');
         loadMore();
     }
 }
 
-function searchCommits(){
-  var searchText = $( '#searchBar' ).val().toLowerCase();
-  $("#buttonList").children('button').each(function ( index ){
-    var labelText = $( this ).find('div > label').text().toLowerCase();
-    if (labelText.indexOf(searchText) === -1){
-      $( this ).hide();
-    }else {
-      $( this ).show();
-    }
-  });
-}
-
-document.getElementById('searchBar').oninput = searchCommits;
+document.getElementById('searchBar').oninput = function() {
+    searchBarValue = $('#searchBar').val().toLowerCase();
+    deleteButtons();
+    postQueryAndAddButtons({
+        'page': 1
+    });
+};
 $("#buttonList").scroll(bindScroll);

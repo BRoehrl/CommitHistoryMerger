@@ -99,7 +99,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // CommitsShowJSON handler
 func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	vars := map[string]string{"author": r.FormValue("author"), "repo": r.FormValue("repo"), "date": r.FormValue("date")}
+	vars := map[string]string{"commit": r.FormValue("commit"), "author": r.FormValue("author"), "repo": r.FormValue("repo"), "date": r.FormValue("date")}
 	query := getQueryFromVars(vars)
 
 	queryResult := processor.Commits{}
@@ -351,6 +351,7 @@ func getQueryFromVars(vars map[string]string) processor.Query {
 		}
 	}
 
+	query.Commit = vars["commit"]
 	query.UseRegex = true
 
 	return query

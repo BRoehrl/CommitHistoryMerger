@@ -53,7 +53,7 @@ function bindScroll() {
     }
 }
 
-function searchCommits(e){
+function searchCommits(){
   var searchText = $( '#searchBar' ).val().toLowerCase();
   $("#buttonList").children('button').each(function ( index ){
     var labelText = $( this ).find('div > label').text().toLowerCase();

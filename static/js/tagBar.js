@@ -11,6 +11,8 @@ window.onload = function() {
             }
             isLoading = false;
             refreshQuery();
+        }else{
+          refreshQuery();
         }
     }
 };
@@ -72,12 +74,15 @@ function deleteButtons() {
     document.getElementById('buttonList').innerHTML = "";
 }
 
+var authors = [];
+var repos = [];
+var dates = [];
+var strDate = '';
 function refreshQuery() {
-    var authors = [];
-    var repos = [];
-    var dates = [];
     var i;
-
+    authors = [];
+    repos = [];
+    dates = [];
     var items = $('#tagBar').tagsinput('items');
     var arrayLength = items.length;
     for (i = 0; i < arrayLength; i++) {
@@ -106,7 +111,7 @@ function refreshQuery() {
     if (repos.length > 0) {
         query = query + '&repo=' + repos.join(';');
     }
-    var strDate = "";
+    strDate = "";
     if (dates.length > 0) {
         var earliestDate = new Date(3000, 1, 1);
         var earliestString = '3000-01-01';
@@ -122,16 +127,7 @@ function refreshQuery() {
         query = query + '&since=' + strDate;
     }
 
-    var params = {
-        'author': authors.join(';'),
-        'repo': repos.join(';'),
-        'date': strDate
-    };
-    $.post('./commits', params, function(data, textStatus) {
-        document.getElementById('buttonList').innerHTML = compiledButton({
-            button_data: data
-        });
-    }, "json");
+    postQueryAndSetButtons();
 
     query = query.replace('&', '?');
     var oldPath = "." + window.location.href.substring(window.location.href.lastIndexOf("/"));
@@ -143,4 +139,19 @@ function refreshQuery() {
         //$('#pleaseWaitDialog').modal('show');
         //window.location = query;
     }
+}
+
+function postQueryAndSetButtons(){
+  var params = {
+      'author': authors.join(';'),
+      'repo': repos.join(';'),
+      'date': strDate,
+      'page': 0,
+      'perPage': 30,
+  };
+  $.post('./commits', params, function(data, textStatus) {
+      document.getElementById('buttonList').innerHTML = compiledButton({
+          button_data: data
+      });
+  }, "json");
 }

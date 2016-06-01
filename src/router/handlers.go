@@ -110,15 +110,38 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Sort(queryResult)
 
+	//For paging. On empty or error: no paging
+	page, _ := strconv.Atoi(r.FormValue("page"))
+	perPage, _ := strconv.Atoi(r.FormValue("perPage"))
+	var maxIndex, minIndex int
+
+	if page != 0 {
+		// if not specified 30 commits per page
+		if perPage == 0	{
+			perPage = 30
+		}
+		maxIndex = page*perPage - 1
+		minIndex = page*perPage - perPage
+	}
+
+	currentIndex := -1
 	commitData := []Buttondata{}
 	for _, com := range queryResult {
+		currentIndex++
 		formatedDate := com.Time.Format(time.RFC822)[:10]
+		if page != 0 {
+			if currentIndex < minIndex {
+				continue
+			}
+			if currentIndex > maxIndex {
+				break
+			}
+		}
 		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch, com.Time.UnixNano()})
 	}
 	if err := json.NewEncoder(w).Encode(commitData); err != nil {
 		panic(err)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 

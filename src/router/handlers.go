@@ -6,6 +6,7 @@ import (
 	"git"
 	"git/processor"
 	"html/template"
+	"jwts"
 	"log"
 	"net/http"
 	"net/url"
@@ -14,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
@@ -22,8 +24,8 @@ import (
 type Page struct {
 	Title,
 	SinceDateString,
-	ActiveProfile string
-	Buttondata []Buttondata
+	ActiveProfile,
+	GitClientID string
 	RepoData   []Repodata
 	Settings   git.Config
 	Profiles,
@@ -52,12 +54,19 @@ const (
 	TITLE = "CHF"
 )
 
+var jwtProvider jwts.Provider
+
+func init() {
+	jwtProvider = jwts.New([]byte("SECRET"), jwts.Config{Method: jwt.SigningMethodHS256, TTL: 3600 * 24 * 3})
+}
+
 var page Page
 
 var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 
 func updatePageData() {
 	page.Title = TITLE
+	page.GitClientID = "ea3fc9e6664643bd95b9"
 	page.Profiles = processor.GetSavedConfigs()
 	page.Authors = processor.GetCachedAuthors()
 	page.Repos = processor.GetCachedRepos()
@@ -66,32 +75,40 @@ func updatePageData() {
 	page.ActiveProfile = processor.LoadedConfig
 }
 
+// GitHubSignIn handler
+func GitHubSignIn(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	authToken, err := git.GetAuthKey(vars["githubLoginCode"])
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	currentUser := git.GetUserFromToken(authToken)
+	git.AddUser(currentUser.Name, authToken)
+	log.Println(currentUser)
+
+	token := jwtProvider.New()
+	token.Claims["id"] = currentUser.Name
+	tokenBytes, err := jwtProvider.Sign(token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(tokenBytes)
+	http.Redirect(w, r, "/", http.StatusMovedPermanently)
+}
+
 // Index handler
 func Index(w http.ResponseWriter, r *http.Request) {
+	jwtToken, err := jwtProvider.Get(r)
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println(jwtToken.Claims["id"])
+	}
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
-
-	vars := mux.Vars(r)
-
-	query := getQueryFromVars(vars)
-
-	//queryResult := processor.GetCommits(query)
-	//Experimental: Concurrent implementation with chanels
-	queryResult := processor.Commits{}
-	commitChanel := make(chan git.Commit)
-	go processor.SendCommits(query, commitChanel)
-	for commit := range commitChanel {
-		queryResult = append(queryResult, commit)
-	}
-	sort.Sort(queryResult)
-	//log.Println(len(queryResult))
-
-	commitData := []Buttondata{}
-	for _, com := range queryResult {
-		formatedDate := com.Time.Format(time.RFC822)[:10]
-		commitData = append(commitData, Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch, com.Time.UnixNano()})
-	}
-	page.Buttondata = commitData
 	updatePageData()
 	templates.ExecuteTemplate(w, "commits.html", page)
 }
@@ -117,7 +134,7 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 
 	if page != 0 {
 		// if not specified 30 commits per page
-		if perPage == 0	{
+		if perPage == 0 {
 			perPage = 30
 		}
 		maxIndex = page*perPage - 1
@@ -143,7 +160,6 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 }
-
 
 // AuthorsShowJSON handler
 func AuthorsShowJSON(w http.ResponseWriter, r *http.Request) {

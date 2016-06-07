@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"net/url"
+	"log"
 )
 
 // RateLimit is the RateLimit for GitHub API queries
@@ -19,6 +21,51 @@ var RateLimitRemaining int
 // RateLimitReset is the time left until the next ratelimit reset
 var RateLimitReset int
 var islastPage bool
+
+// GetAuthKey TODO
+func GetAuthKey(code string) (string, error){
+	client := &http.Client{}
+	form := url.Values{}
+    form.Add("client_id", "ea3fc9e6664643bd95b9")
+    form.Add("client_secret", "e71f2a197138b8e984a67ee2010ef3463dc5d473")
+		form.Add("code", code)
+	req, err := http.NewRequest("POST", "https://github.com/login/oauth/access_token", strings.NewReader(form.Encode()))
+	if err != nil {
+		log.Println(req, err)
+		return "", err
+	}
+	req.Header.Set("Accept", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	type AuthtokenResponse struct {
+		AccessToken    string `json:"access_token"`
+		Scope     string `json:"scope"`
+		TokenType string `json:"token_type"`
+	}
+	auRe := AuthtokenResponse{}
+	err = json.Unmarshal([]byte(body), &auRe)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	return auRe.AccessToken, nil
+}
+
+// GetUserFromToken retuns the authTokens owner
+func GetUserFromToken(authToken string) (User){
+	 CurrentUser := User{}
+	 UnmarshalFromGetResponse(config.GitURL + "/user", authToken, &CurrentUser)
+	 return CurrentUser
+}
 
 func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 	client := &http.Client{}
@@ -48,10 +95,11 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 	return
 }
 
+
 // UnmarshalFromGetResponse unmarshals the json response of a git api call
 // into an interface i
-func UnmarshalFromGetResponse(url string, i interface{}) (err error) {
-	resp, err := getResponse(url, config.GitAuthkey)
+func UnmarshalFromGetResponse(url, authKey string, i interface{}) (err error) {
+	resp, err := getResponse(url, authKey)
 	if err != nil {
 		return
 	}
@@ -72,7 +120,7 @@ func GetRepositories() (allRepos Repos, err error) {
 		repoQuery := config.GitURL + "/orgs/" + config.BaseOrganisation + "/repos?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var reposPage Repos
-		err = UnmarshalFromGetResponse(repoQuery, &reposPage)
+		err = UnmarshalFromGetResponse(repoQuery, config.GitAuthkey, &reposPage)
 		if err != nil {
 			return
 		}
@@ -106,7 +154,7 @@ func addBranchesToSingleRepo(repo Repo) (r Repo, err error) {
 		branchQuery := config.GitURL + "/repos/" + config.BaseOrganisation + "/" + repo.Name + "/branches?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var branchesPage []Branch
-		err = UnmarshalFromGetResponse(branchQuery, &branchesPage)
+		err = UnmarshalFromGetResponse(branchQuery, config.GitAuthkey, &branchesPage)
 		branches = append(branches, branchesPage...)
 		if err != nil {
 			return repo, err
@@ -131,7 +179,7 @@ func addBranchesToSingleRepo(repo Repo) (r Repo, err error) {
 //  Deprecated: GetNewest100Commits
 func (r Repo) GetNewest100Commits() (commits []JSONCommit, err error) {
 	query := config.GitURL + "/repos/" + config.BaseOrganisation + "/" + r.Name + "/commits?per_page=100"
-	err = UnmarshalFromGetResponse(query, &commits)
+	err = UnmarshalFromGetResponse(query, config.GitAuthkey, &commits)
 	return
 }
 
@@ -150,7 +198,7 @@ func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit) {
 
 		currentPage++
 		var singlePage []JSONCommit
-		err := UnmarshalFromGetResponse(query, &singlePage)
+		err := UnmarshalFromGetResponse(query, config.GitAuthkey, &singlePage)
 		for _, gitCom := range singlePage {
 			newCommit := Commit{
 				Sha:         gitCom.Sha,

@@ -19,8 +19,13 @@ window.onload = function() {
 
 $('#tagBar').on('beforeItemAdd', function(event) {
     if (event.item.indexOf(':') == -1) {
-        event.cancel = true;
-        return;
+      event.cancel = true;
+      return;
+    }
+    // valid identifiers (author, repo, since, date)
+    if('arsd'.indexOf(event.item[0].toLowerCase())  == -1) {
+      event.cancel = true;
+      return;
     }
 });
 
@@ -93,14 +98,15 @@ function refreshQuery() {
         var wholeTag = items[i];
         var type = wholeTag.substring(0, wholeTag.indexOf(":"));
         var tag = wholeTag.substring(wholeTag.indexOf(":") + 1);
-        switch (type.toLowerCase()) {
-            case 'author':
+        switch (type.toLowerCase()[0]) {
+            case 'a': //author
                 authors.push(tag);
                 break;
-            case 'repo':
+            case 'r': //repo
                 repos.push(tag);
                 break;
-            case 'since':
+            case 's': //since
+            case 'd': //since (date)
                 dates.push(tag);
                 break;
             default:
@@ -142,8 +148,8 @@ function refreshQuery() {
             "html": window.html,
             "pageTitle": window.pageTitle
         }, "", query);
-        //$('#pleaseWaitDialog').modal('show');
-        //window.location = query;
+        $('#pleaseWaitDialog').modal('show');
+        window.location = query;
     }
 }
 
@@ -205,7 +211,7 @@ function postQueryAndAddButtons(pagination, callbackFunction) {
                 button_data: data
             });
             latestPage = pagination.page;
-            if (callbackFunction) callbackFunction();
+            if (typeof callbackFunction == 'function') callbackFunction();
         },
         dataType: "json",
         async: true
@@ -213,7 +219,6 @@ function postQueryAndAddButtons(pagination, callbackFunction) {
 }
 
 function loadMore() {
-    console.log("More loaded");
     postQueryAndAddButtons({
         'page': latestPage + 1
     }, function() {

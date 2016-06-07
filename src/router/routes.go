@@ -29,9 +29,19 @@ var routes = Routes{
 			[]string{"author", "{author}"},
 			[]string{"repo", "{repo}"},
 			[]string{"since", "{date}"},
+			[]string{"code", "{githubLoginCode}"},
 			nil,
 		},
 		Index,
+	},
+	Route{
+		"Login",
+		"GET",
+		"/login",
+		[][]string{
+			[]string{"code", "{githubLoginCode}"},
+		},
+		GitHubSignIn,
 	},
 	Route{
 		"AuthorsShow",

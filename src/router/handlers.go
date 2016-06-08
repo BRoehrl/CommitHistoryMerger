@@ -26,8 +26,8 @@ type Page struct {
 	SinceDateString,
 	ActiveProfile,
 	GitClientID string
-	RepoData   []Repodata
-	Settings   git.Config
+	RepoData []Repodata
+	Settings git.Config
 	Profiles,
 	Authors,
 	Repos []string
@@ -75,38 +75,59 @@ func updatePageData() {
 	page.ActiveProfile = processor.LoadedConfig
 }
 
-// GitHubSignIn handler
-func GitHubSignIn(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	authToken, err := git.GetAuthKey(vars["githubLoginCode"])
+func gitHubSignIn(code string) (jwtBytes []byte, ID string, Error error) {
+
+	authToken, err := git.GetAuthKeyFromGit(code)
 	if err != nil {
 		log.Println(err)
-		return
+		return nil, "", err
 	}
 
 	currentUser := git.GetUserFromToken(authToken)
-	git.AddUser(currentUser.Name, authToken)
-	log.Println(currentUser)
+	stringID := strconv.Itoa(currentUser.ID)
+	git.AddUser(stringID, authToken)
 
 	token := jwtProvider.New()
-	token.Claims["id"] = currentUser.Name
+	token.Claims["userID"] = stringID
 	tokenBytes, err := jwtProvider.Sign(token)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return nil, "", err
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(tokenBytes)
-	http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	return tokenBytes, stringID, nil
 }
 
 // Index handler
 func Index(w http.ResponseWriter, r *http.Request) {
-	jwtToken, err := jwtProvider.Get(r)
-	if err != nil {
-		log.Println(err)
+	vars := mux.Vars(r)
+
+	var userID string
+	// if redirected from github login
+	if code, ok := vars["githubLoginCode"]; ok {
+		var err error
+		var newJwtBytes []byte
+		newJwtBytes, userID, err = gitHubSignIn(code)
+		if err != nil {
+			// TODO
+			log.Println(err)
+		}
+		expiration := time.Now().Add(24 * 7 * time.Hour)
+		cookie := http.Cookie{Name: "jwt", Value: string(newJwtBytes), Expires: expiration}
+		http.SetCookie(w, &cookie)
+
 	} else {
-		log.Println(jwtToken.Claims["id"])
+		JWT, err := jwtProvider.Get(r)
+		if err != nil {
+			// TODO no one logged in
+			//log.Println(err)
+		} else {
+			userID = JWT.Claims["userID"].(string)
+		}
 	}
+	if userID != "" {
+		log.Println("User " + userID + " is logged in")
+	}
+
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 	updatePageData()

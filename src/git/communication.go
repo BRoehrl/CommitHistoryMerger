@@ -22,8 +22,8 @@ var RateLimitRemaining int
 var RateLimitReset int
 var islastPage bool
 
-// GetAuthKey TODO
-func GetAuthKey(code string) (string, error){
+// GetAuthKeyFromGit TODO
+func GetAuthKeyFromGit(code string) (string, error){
 	client := &http.Client{}
 	form := url.Values{}
     form.Add("client_id", "ea3fc9e6664643bd95b9")

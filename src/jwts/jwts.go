@@ -1,7 +1,6 @@
 // Copied from https://github.com/dghubble/jwts
 // Author: Dalton Hubble
 
-
 // Package jwts offers a Provider interface for JSON Web Token management backed
 // by github.com/dgrijalva/jwt-go JWTs.
 package jwts
@@ -90,12 +89,20 @@ func (m *Manager) Sign(token *jwt.Token) ([]byte, error) {
 	return []byte(jwtString), err
 }
 
-// Get gets the signed JWT from the Authorization header. If the token is
+// Get gets the signed JWT from the Authorization header or jwt cookie. If the token is
 // missing, expired, or the signature does not validate, returns an error.
 func (m *Manager) Get(req *http.Request) (*jwt.Token, error) {
+
 	jwtString := req.Header.Get("Authorization")
 	if jwtString == "" {
-		return nil, jwt.ErrNoTokenInRequest
+		cookie, err := req.Cookie("jwt")
+		if err != nil {
+			return nil, jwt.ErrNoTokenInRequest
+		}
+		if cookie.Value == "" {
+			return nil, jwt.ErrNoTokenInRequest
+		}
+		jwtString = cookie.Value
 	}
 	token, err := jwt.Parse(jwtString, m.getKey)
 	if err == nil && token.Valid {

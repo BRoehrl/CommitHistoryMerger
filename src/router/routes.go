@@ -35,15 +35,6 @@ var routes = Routes{
 		Index,
 	},
 	Route{
-		"Login",
-		"GET",
-		"/login",
-		[][]string{
-			[]string{"code", "{githubLoginCode}"},
-		},
-		GitHubSignIn,
-	},
-	Route{
 		"AuthorsShow",
 		"GET",
 		"/authors",

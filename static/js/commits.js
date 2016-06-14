@@ -55,10 +55,6 @@ var compiledButton = _.template('<% _.each(button_data, function(bd) { %>\
   </button> <% }); %>');
 
 var loc = window.location;
-var serversocket = new WebSocket("ws://" + loc.host + "/socket");
-serversocket.onopen = function() {
-    //refreshQuery();
-};
 
 function sortThat() {
     $("button.btn.btn-lg.btn-block.btn-default").sort(function(prev, next) {
@@ -66,14 +62,6 @@ function sortThat() {
     }).appendTo("#buttonList");
 }
 
-
-serversocket.onmessage = function(e) {
-    console.log(e);
-    if (loc.pathname !== "/") return;
-    document.getElementById('buttonList').innerHTML += compiledButton({
-        button_data: $.parseJSON(e.data)
-    });
-};
 
 function deleteButtons() {
     document.getElementById('buttonList').innerHTML = "";

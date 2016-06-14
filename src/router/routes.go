@@ -42,6 +42,13 @@ var routes = Routes{
 		AuthorsShow,
 	},
 	Route{
+		"RefreshJWT",
+		"GET",
+		"/refresh_token",
+		nil,
+		RefreshJWT,
+	},
+	Route{
 		"SettingsShow",
 		"GET",
 		"/settings",

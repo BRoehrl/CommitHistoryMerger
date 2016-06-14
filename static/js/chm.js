@@ -15,3 +15,10 @@ function loadProfile() {
   showWaitDialog();
   window.location.reload();
 }
+
+function refreshJWT() {
+  $.get('./refresh_token');
+}
+
+refreshJWT();
+setInterval(refreshJWT, 60*60*1000);

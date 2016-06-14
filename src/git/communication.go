@@ -3,13 +3,13 @@ package git
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"net/url"
-	"log"
 )
 
 // RateLimit is the RateLimit for GitHub API queries
@@ -23,12 +23,12 @@ var RateLimitReset int
 var islastPage bool
 
 // GetAuthKeyFromGit TODO
-func GetAuthKeyFromGit(code string) (string, error){
+func GetAuthKeyFromGit(code string) (string, error) {
 	client := &http.Client{}
 	form := url.Values{}
-    form.Add("client_id", "ea3fc9e6664643bd95b9")
-    form.Add("client_secret", "e71f2a197138b8e984a67ee2010ef3463dc5d473")
-		form.Add("code", code)
+	form.Add("client_id", "ea3fc9e6664643bd95b9")
+	form.Add("client_secret", "e71f2a197138b8e984a67ee2010ef3463dc5d473")
+	form.Add("code", code)
 	req, err := http.NewRequest("POST", "https://github.com/login/oauth/access_token", strings.NewReader(form.Encode()))
 	if err != nil {
 		log.Println(req, err)
@@ -47,9 +47,9 @@ func GetAuthKeyFromGit(code string) (string, error){
 		return "", err
 	}
 	type AuthtokenResponse struct {
-		AccessToken    string `json:"access_token"`
-		Scope     string `json:"scope"`
-		TokenType string `json:"token_type"`
+		AccessToken string `json:"access_token"`
+		Scope       string `json:"scope"`
+		TokenType   string `json:"token_type"`
 	}
 	auRe := AuthtokenResponse{}
 	err = json.Unmarshal([]byte(body), &auRe)
@@ -61,10 +61,10 @@ func GetAuthKeyFromGit(code string) (string, error){
 }
 
 // GetUserFromToken retuns the authTokens owner
-func GetUserFromToken(authToken string) (User){
-	 CurrentUser := User{}
-	 UnmarshalFromGetResponse(config.GitURL + "/user", authToken, &CurrentUser)
-	 return CurrentUser
+func GetUserFromToken(authToken string) User {
+	CurrentUser := User{}
+	UnmarshalFromGetResponse(DefaultConfig.GitURL+"/user", authToken, &CurrentUser)
+	return CurrentUser
 }
 
 func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
@@ -95,7 +95,6 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 	return
 }
 
-
 // UnmarshalFromGetResponse unmarshals the json response of a git api call
 // into an interface i
 func UnmarshalFromGetResponse(url, authKey string, i interface{}) (err error) {
@@ -112,15 +111,15 @@ func UnmarshalFromGetResponse(url, authKey string, i interface{}) (err error) {
 	return
 }
 
-// GetRepositories returns all or config.MaxRepos repositories of the baseOrganisation.
-func GetRepositories() (allRepos Repos, err error) {
+// GetRepositories returns all or userConfig.MaxRepos repositories of the baseOrganisation.
+func GetRepositories(userConfig Config) (allRepos Repos, err error) {
 	currentPage := 1
-	highestPageNumber := (config.MaxRepos-1)/100 + 1
+	highestPageNumber := (userConfig.MaxRepos-1)/100 + 1
 	for currentPage <= highestPageNumber {
-		repoQuery := config.GitURL + "/orgs/" + config.BaseOrganisation + "/repos?per_page=100&page=" + strconv.Itoa(currentPage)
+		repoQuery := userConfig.GitURL + "/orgs/" + userConfig.BaseOrganisation + "/repos?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var reposPage Repos
-		err = UnmarshalFromGetResponse(repoQuery, config.GitAuthkey, &reposPage)
+		err = UnmarshalFromGetResponse(repoQuery, userConfig.GitAuthkey, &reposPage)
 		if err != nil {
 			return
 		}
@@ -130,14 +129,14 @@ func GetRepositories() (allRepos Repos, err error) {
 			break
 		}
 	}
-	allRepos, err = AddBranchesToRepos(allRepos)
+	allRepos, err = AddBranchesToRepos(allRepos, userConfig)
 	return
 }
 
 // AddBranchesToRepos adds to each Repository its branches
-func AddBranchesToRepos(allRepos Repos) (reposWithBranches Repos, err error) {
+func AddBranchesToRepos(allRepos Repos, userConfig Config) (reposWithBranches Repos, err error) {
 	for _, repo := range allRepos {
-		repo, err = addBranchesToSingleRepo(repo)
+		repo, err = addBranchesToSingleRepo(userConfig, repo)
 		if err != nil {
 			return
 		}
@@ -146,15 +145,15 @@ func AddBranchesToRepos(allRepos Repos) (reposWithBranches Repos, err error) {
 	return
 }
 
-func addBranchesToSingleRepo(repo Repo) (r Repo, err error) {
+func addBranchesToSingleRepo(userConfig Config, repo Repo) (r Repo, err error) {
 	currentPage := 1
-	highestPageNumber := (config.MaxBranches-1)/100 + 1
+	highestPageNumber := (userConfig.MaxBranches-1)/100 + 1
 	branches := []Branch{}
 	for currentPage <= highestPageNumber {
-		branchQuery := config.GitURL + "/repos/" + config.BaseOrganisation + "/" + repo.Name + "/branches?per_page=100&page=" + strconv.Itoa(currentPage)
+		branchQuery := userConfig.GitURL + "/repos/" + userConfig.BaseOrganisation + "/" + repo.Name + "/branches?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var branchesPage []Branch
-		err = UnmarshalFromGetResponse(branchQuery, config.GitAuthkey, &branchesPage)
+		err = UnmarshalFromGetResponse(branchQuery, userConfig.GitAuthkey, &branchesPage)
 		branches = append(branches, branchesPage...)
 		if err != nil {
 			return repo, err
@@ -168,29 +167,21 @@ func addBranchesToSingleRepo(repo Repo) (r Repo, err error) {
 		branchMap[b.Name] = b.Commit.Sha
 	}
 	repo.SelectedBranch = repo.DefaultBranch
-	if branchMap[config.MiscDefaultBranch] != "" {
-		repo.SelectedBranch = config.MiscDefaultBranch
+	if branchMap[userConfig.MiscDefaultBranch] != "" {
+		repo.SelectedBranch = userConfig.MiscDefaultBranch
 	}
 	repo.Branches = branchMap
 	return repo, err
-}
-
-// GetNewest100Commits returns the 100 newest commits for the specified repository
-//  Deprecated: GetNewest100Commits
-func (r Repo) GetNewest100Commits() (commits []JSONCommit, err error) {
-	query := config.GitURL + "/repos/" + config.BaseOrganisation + "/" + r.Name + "/commits?per_page=100"
-	err = UnmarshalFromGetResponse(query, config.GitAuthkey, &commits)
-	return
 }
 
 // CommitWaitGroup is a WaitGroup for sending commits via SendAllCommitsBetween
 var CommitWaitGroup sync.WaitGroup
 
 // SendAllCommitsBetween sends all commits of repo r between times from and to the the supplied channel
-func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit) {
+func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit, userConfig Config) {
 	currentPage := 1
 	for {
-		query := config.GitURL + "/repos/" + config.BaseOrganisation
+		query := userConfig.GitURL + "/repos/" + userConfig.BaseOrganisation
 		query += "/" + r.Name
 		query += "/commits?since=" + from.Format(time.RFC3339) + "&until=" + to.Format(time.RFC3339)
 		query += "&sha=" + r.Branches[r.SelectedBranch]
@@ -198,7 +189,7 @@ func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit) {
 
 		currentPage++
 		var singlePage []JSONCommit
-		err := UnmarshalFromGetResponse(query, config.GitAuthkey, &singlePage)
+		err := UnmarshalFromGetResponse(query, userConfig.GitAuthkey, &singlePage)
 		for _, gitCom := range singlePage {
 			newCommit := Commit{
 				Sha:         gitCom.Sha,

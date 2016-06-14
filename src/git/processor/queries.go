@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"user"
 )
 
 // A Query to the Backend
@@ -19,42 +20,43 @@ type Query struct {
 	UseRegex bool
 }
 
-var updateCommits, updateAll bool
-
 // SendCommits sends all commits matching the query to a supplied channel
-func SendCommits(query Query, commits chan git.Commit) {
+func SendCommits(userID string, query Query, commits chan git.Commit) {
+	uc := user.GetUserCache(userID)
 
-	if updateCommits || updateAll {
-		flushCommitCache()
-		updateCommits = false
-		if updateAll {
-			flushRepos()
+	if uc.UpdateCommits || uc.UpdateAll {
+		flushCommitCache(uc)
+		uc.UpdateCommits = false
+		if uc.UpdateAll {
+			flushRepos(uc)
 		}
-		updateAll = false
+		uc.UpdateAll = false
 	}
 	// if no date set use default Date
 	if query.Since.Equal(time.Time{}) {
-		query.Since = git.GetConfig().SinceTime
+		query.Since = uc.Config.SinceTime
 	}
 
 	allCommits := make(chan git.Commit)
 	// fetch commits if not in cache else send cache to channel
-	if query.Since.Before(cacheTime) {
-		go sendGitCommits(query.Since, cacheTime, allCommits)
-		cacheTime = query.Since
+	if query.Since.Before(uc.CacheTime) {
+		go sendGitCommits(&uc, query.Since, uc.CacheTime, allCommits)
+		uc.CacheTime = query.Since
 	} else {
-		allCommits = make(chan git.Commit, len(cachedCommits))
-		for _, commit := range cachedCommits {
+		allCommits = make(chan git.Commit, len(uc.CachedCommits))
+		for _, commit := range uc.CachedCommits {
 			allCommits <- commit
 		}
 		close(allCommits)
 	}
+
 	for commit := range allCommits {
-		addSingleCommitToCache(commit, false)
+		addSingleCommitToCache(&uc, commit, false)
 		if keepCommit(query, commit) {
 			commits <- commit
 		}
 	}
+	user.SetCachedCommits(userID, uc.CachedCommits)
 	close(commits)
 	return
 }
@@ -108,7 +110,7 @@ func keepCommit(query Query, commit git.Commit) bool {
 		keep = false
 		if commit.Comment == query.Commit || query.Commit == "" {
 			keep = true
-		}else if query.UseRegex {
+		} else if query.UseRegex {
 			keep, _ = regexp.MatchString(strings.ToLower(query.Commit), strings.ToLower(commit.Comment))
 		}
 	}
@@ -116,12 +118,12 @@ func keepCommit(query Query, commit git.Commit) bool {
 	return keep
 }
 
-// GetSingleCommit returns the commit with sha
-func GetSingleCommit(sha string) (singleCommit git.Commit) {
-	if !cachedShas[sha] {
+// GetSingleCommit returns the commit with sha if in cache
+func GetSingleCommit(userCache git.UserCache, sha string) (singleCommit git.Commit) {
+	if !userCache.CachedShas[sha] {
 		return
 	}
-	for _, com := range cachedCommits {
+	for _, com := range userCache.CachedCommits {
 		if com.Sha == sha {
 			singleCommit = com
 			return
@@ -131,13 +133,13 @@ func GetSingleCommit(sha string) (singleCommit git.Commit) {
 }
 
 // GetCacheTimeString returns the earliest date for which the commits are cached as a string
-func GetCacheTimeString() (cacheTimeString string) {
-	return cacheTime.Format(time.RFC3339)[:10]
+func GetCacheTimeString(userCache git.UserCache) (cacheTimeString string) {
+	return userCache.CacheTime.Format(time.RFC3339)[:10]
 }
 
 // GetCachedAuthors returns all cached authornames
-func GetCachedAuthors() (authors []string) {
-	for key := range cachedAuthors {
+func GetCachedAuthors(userCache git.UserCache) (authors []string) {
+	for key := range userCache.CachedAuthors {
 		authors = append(authors, key)
 	}
 	sort.Strings(authors)
@@ -145,8 +147,8 @@ func GetCachedAuthors() (authors []string) {
 }
 
 // GetCachedRepos returns all cached repositorynames
-func GetCachedRepos() (repos []string) {
-	for key := range cachedRepos {
+func GetCachedRepos(userCache git.UserCache) (repos []string) {
+	for key := range userCache.CachedRepos {
 		repos = append(repos, key)
 	}
 	sort.Strings(repos)
@@ -154,29 +156,29 @@ func GetCachedRepos() (repos []string) {
 }
 
 // GetCachedRepoObjects returns all cached repositories
-func GetCachedRepoObjects() (repos git.Repos, err error) {
-	if len(cachedRepos) == 0 {
-		allRepos, err = git.GetRepositories()
+func GetCachedRepoObjects(userCache git.UserCache) (repos git.Repos, err error) {
+	if len(userCache.CachedRepos) == 0 {
+		userCache.AllRepos, err = git.GetRepositories(userCache.Config)
 	}
-	for _, repo := range allRepos {
-		cachedRepos[repo.Name] = true
+	for _, repo := range userCache.AllRepos {
+		userCache.CachedRepos[repo.Name] = true
 	}
-	return allRepos, err
+	return userCache.AllRepos, err
 }
 
 // SetRepoBranch sets the branch of a repository
-func SetRepoBranch(repoName, branchName string) (err error) {
-	if !cachedRepos[repoName] {
+func SetRepoBranch(userCache git.UserCache, repoName, branchName string) (err error) {
+	if !userCache.CachedRepos[repoName] {
 		return errors.New("Repository not found/cached: " + repoName)
 	}
-	for i, repo := range allRepos {
+	for i, repo := range userCache.AllRepos {
 		if repo.Name == repoName {
 			for branch := range repo.Branches {
 				if branch == branchName {
 					if repo.SelectedBranch != branch {
 						repo.SelectedBranch = branch
-						updateCommits = true
-						allRepos[i] = repo
+						userCache.UpdateCommits = true
+						userCache.AllRepos[i] = repo
 					}
 					return
 				}
@@ -188,23 +190,23 @@ func SetRepoBranch(repoName, branchName string) (err error) {
 }
 
 // UpdateDefaultBranch sets the Branch of all repositories to the default branch from the config.
-func UpdateDefaultBranch() {
-	defaultBranch := git.GetConfig().MiscDefaultBranch
-	for i, repo := range allRepos {
+func UpdateDefaultBranch(userCache git.UserCache) {
+	defaultBranch := userCache.Config.MiscDefaultBranch
+	for i, repo := range userCache.AllRepos {
 		if repo.Branches[defaultBranch] != "" {
 			repo.SelectedBranch = defaultBranch
-			allRepos[i] = repo
+			userCache.AllRepos[i] = repo
 		}
 	}
 }
 
 // SetConfig sets the config and updates the default branch if necessary
-func SetConfig(config git.Config) {
-	completeUpdate, miscBranchChanged := git.SetConfig(config)
-	updateAll = completeUpdate
+func SetConfig(userCache git.UserCache, config git.Config) {
+	completeUpdate, miscBranchChanged := git.SetConfig(userCache.Config, config)
+	userCache.UpdateAll = completeUpdate
 	if miscBranchChanged {
-		UpdateDefaultBranch()
-		updateCommits = true
+		UpdateDefaultBranch(userCache)
+		userCache.UpdateCommits = true
 	}
 }
 

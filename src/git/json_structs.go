@@ -56,6 +56,19 @@ type Commit struct {
 	Time time.Time
 }
 
+// Commits is a sortable slice of Commits
+type Commits []Commit
+
+func (c Commits) Len() int {
+	return len(c)
+}
+func (c Commits) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+func (c Commits) Less(i, j int) bool {
+	return c[i].Time.After(c[j].Time)
+}
+
 // SimpleUser is a struct containing the basic user information
 type SimpleUser struct {
 	Name  string    `json:"name"`
@@ -75,6 +88,32 @@ type SimpleCommit struct {
 type Branch struct {
 	Name   string     `json:"name"`
 	Commit JSONCommit `json:"commit"`
+}
+
+// UserCache is a struct containing all caches of a specific user
+type UserCache struct {
+	UserID        string
+	CachedCommits Commits
+	CachedShas    map[string]bool
+	CachedAuthors map[string]bool
+	CachedRepos   map[string]bool
+	CacheTime     time.Time
+	AllRepos      Repos
+	UpdateCommits bool
+	UpdateAll     bool
+	Config        Config
+}
+
+// GetNewUserCache returns a new UserCache with defaultValues
+func GetNewUserCache() (userCache UserCache) {
+	userCache = UserCache{}
+	userCache.CachedCommits = Commits{}
+	userCache.CachedShas = make(map[string]bool)
+	userCache.CachedAuthors = make(map[string]bool)
+	userCache.CachedRepos = make(map[string]bool)
+	userCache.CacheTime = time.Now().AddDate(0, 0, 1)
+	userCache.AllRepos = Repos{}
+	return
 }
 
 // SortableCommits is a sortable slice of JSONCommits

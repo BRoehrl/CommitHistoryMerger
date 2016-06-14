@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"git"
 	"git/processor"
@@ -14,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"user"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -64,14 +66,14 @@ var page Page
 
 var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 
-func updatePageData() {
+func updatePageData(userCache git.UserCache) {
 	page.Title = TITLE
 	page.GitClientID = "ea3fc9e6664643bd95b9"
 	page.Profiles = processor.GetSavedConfigs()
-	page.Authors = processor.GetCachedAuthors()
-	page.Repos = processor.GetCachedRepos()
-	page.Settings = git.GetConfig()
-	page.SinceDateString = processor.GetCacheTimeString() //page.Settings.SinceTime.Format(time.RFC3339)[:10]
+	page.Authors = processor.GetCachedAuthors(userCache)
+	page.Repos = processor.GetCachedRepos(userCache)
+	page.Settings = userCache.Config
+	page.SinceDateString = processor.GetCacheTimeString(userCache) //page.Settings.SinceTime.Format(time.RFC3339)[:10]
 	page.ActiveProfile = processor.LoadedConfig
 }
 
@@ -85,7 +87,7 @@ func gitHubSignIn(code string) (jwtBytes []byte, ID string, Error error) {
 
 	currentUser := git.GetUserFromToken(authToken)
 	stringID := strconv.Itoa(currentUser.ID)
-	git.AddUser(stringID, authToken)
+	user.AddUser(stringID, authToken)
 
 	token := jwtProvider.New()
 	token.Claims["userID"] = stringID
@@ -102,9 +104,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	var userID string
+	var err error
 	// if redirected from github login
 	if code, ok := vars["githubLoginCode"]; ok {
-		var err error
 		var newJwtBytes []byte
 		newJwtBytes, userID, err = gitHubSignIn(code)
 		if err != nil {
@@ -116,33 +118,60 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &cookie)
 
 	} else {
-		JWT, err := jwtProvider.Get(r)
+		userID, err = checkJWTandGetUserID(r)
 		if err != nil {
-			// TODO no one logged in
-			//log.Println(err)
-		} else {
-			userID = JWT.Claims["userID"].(string)
+			log.Println(err)
 		}
-	}
-	if userID != "" {
-		log.Println("User " + userID + " is logged in")
 	}
 
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
-	updatePageData()
+	if userID == "" {
+		log.Println("No one logged in")
+		updatePageData(git.UserCache{})
+	} else {
+		// ONLY FOR DEBUG
+		if _, ok := user.GetAccessToken(userID); !ok {
+			user.AddUser(userID, "89ceda67ea1d984bf95ef27b81948caadda766ad")
+		}
+		updatePageData(user.GetUserCache(userID))
+	}
 	templates.ExecuteTemplate(w, "commits.html", page)
+}
+
+// RefreshJWT refreshes the JWT cookie
+func RefreshJWT(w http.ResponseWriter, r *http.Request) {
+	JWT, err := jwtProvider.Get(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	freshToken := jwtProvider.New()
+	freshToken.Claims["userID"] = JWT.Claims["userID"]
+	expiration := time.Now().Add(24 * 7 * time.Hour)
+	freshTokenBytes, err := jwtProvider.Sign(freshToken)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	cookie := http.Cookie{Name: "jwt", Value: string(freshTokenBytes), Expires: expiration}
+	http.SetCookie(w, &cookie)
 }
 
 // CommitsShowJSON handler
 func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	vars := map[string]string{"commit": r.FormValue("commit"), "author": r.FormValue("author"), "repo": r.FormValue("repo"), "date": r.FormValue("date")}
 	query := getQueryFromVars(vars)
 
-	queryResult := processor.Commits{}
+	queryResult := git.Commits{}
 	commitChanel := make(chan git.Commit)
-	go processor.SendCommits(query, commitChanel)
+	go processor.SendCommits(userID, query, commitChanel)
 	for commit := range commitChanel {
 		queryResult = append(queryResult, commit)
 	}
@@ -185,36 +214,50 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 // AuthorsShowJSON handler
 func AuthorsShowJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(processor.GetCachedAuthors()); err != nil {
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	userCache := user.GetUserCache(userID)
+	if err := json.NewEncoder(w).Encode(processor.GetCachedAuthors(userCache)); err != nil {
 		panic(err)
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 // AuthorsShow handler
 func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
-	err := r.ParseForm()
+	userID, err := checkJWTandGetUserID(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+		log.Println(err)
+		return
 	}
+	userCache := user.GetUserCache(userID)
 	authorButtons := []Buttondata{}
-	for _, author := range processor.GetCachedAuthors() {
+	for _, author := range processor.GetCachedAuthors(userCache) {
 		authorButtons = append(authorButtons, Buttondata{author, author, "", "", 0})
 	}
-	updatePageData()
+	updatePageData(userCache)
 	templates.ExecuteTemplate(w, "authors.html", page)
 }
 
 // SettingsShow handler
 func SettingsShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
+	w.Header().Set("Content-type", "text/html")
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-	updatePageData()
+	updatePageData(user.GetUserCache(userID))
 	templates.ExecuteTemplate(w, "settings.html", page)
 }
 
@@ -226,10 +269,15 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-
 	config := getConfigFromForm(r.Form)
-	processor.SetConfig(config)
-	updatePageData()
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	userCache := user.GetUserCache(userID)
+	processor.SetConfig(userCache, config)
+	updatePageData(userCache)
 	templates.ExecuteTemplate(w, "settings.html", page)
 }
 
@@ -240,7 +288,12 @@ func SaveProfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
 	vars := mux.Vars(r)
-	processor.SaveCompleteConfig(vars["name"])
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	processor.SaveCompleteConfig(user.GetUserCache(userID), vars["name"])
 }
 
 // LoadProfile handler
@@ -250,7 +303,12 @@ func LoadProfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
 	vars := mux.Vars(r)
-	processor.LoadCompleteConfig(vars["name"])
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	processor.LoadCompleteConfig(user.GetUserCache(userID), vars["name"])
 }
 
 // ReposShowHTML handler
@@ -261,7 +319,13 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-	repos, err := processor.GetCachedRepoObjects()
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	userCache := user.GetUserCache(userID)
+	repos, err := processor.GetCachedRepoObjects(userCache)
 	if err != nil {
 		panic(err)
 	}
@@ -276,7 +340,7 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 		repodata = append(repodata, Repodata{repo.Name, branches, len(branches)})
 
 	}
-	updatePageData()
+	updatePageData(userCache)
 	page.RepoData = repodata
 	templates.ExecuteTemplate(w, "repositories.html", page)
 }
@@ -289,15 +353,29 @@ func RepoBranchChange(w http.ResponseWriter, r *http.Request) {
 	}
 	repo := r.FormValue("repo")
 	branch := r.FormValue("branch")
-	processor.SetRepoBranch(repo, branch)
+
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	userCache := user.GetUserCache(userID)
+
+	processor.SetRepoBranch(userCache, repo, branch)
 }
 
 // ReposShow handler
 func ReposShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	userCache := user.GetUserCache(userID)
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(processor.GetCachedRepos()); err != nil {
+	if err := json.NewEncoder(w).Encode(processor.GetCachedRepos(userCache)); err != nil {
 		panic(err)
 	}
 }
@@ -311,7 +389,13 @@ func ShowSingleCommit(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		// TODO
 	}
-	if err := json.NewEncoder(w).Encode(processor.GetSingleCommit(sha)); err != nil {
+	userID, err := checkJWTandGetUserID(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	userCache := user.GetUserCache(userID)
+	if err := json.NewEncoder(w).Encode(processor.GetSingleCommit(userCache, sha)); err != nil {
 		panic(err)
 	}
 }
@@ -319,46 +403,6 @@ func ShowSingleCommit(w http.ResponseWriter, r *http.Request) {
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-}
-
-// SocketHandler handler
-func SocketHandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	for {
-		jVars := git.JSONVars{}
-		err := conn.ReadJSON(&jVars)
-		if err != nil {
-			//log.Println("1", err)
-			return
-		}
-		vars := map[string]string{"author": jVars.Author, "repo": jVars.Repo, "date": jVars.Querydate}
-		query := getQueryFromVars(vars)
-		commitChanel := make(chan git.Commit)
-		go processor.SendCommits(query, commitChanel)
-		buttonBuffer := []Buttondata{}
-		for com := range commitChanel {
-			formatedDate := com.Time.Format(time.RFC822)[:10]
-			bdata := Buttondata{com.Comment, com.Sha, formatedDate, com.Repo + "/" + com.Branch, com.Time.UnixNano()}
-			buttonBuffer = append(buttonBuffer, bdata)
-			if len(buttonBuffer) > 9 {
-				err = conn.WriteJSON(buttonBuffer)
-				if err != nil {
-					log.Println("2", err)
-					return
-				}
-				buttonBuffer = []Buttondata{}
-			}
-		}
-		if err != nil {
-			log.Println("3", err)
-			return
-		}
-	}
 }
 
 func getQueryFromVars(vars map[string]string) processor.Query {
@@ -410,4 +454,18 @@ func getConfigFromForm(form url.Values) git.Config {
 	config.MaxBranches, _ = strconv.Atoi(form.Get("maxBranches"))
 
 	return config
+}
+
+func checkJWTandGetUserID(r *http.Request) (string, error) {
+	var userID string
+	JWT, err := jwtProvider.Get(r)
+	if err != nil {
+		// TODO no one logged in
+		return "", err
+	}
+	userID = JWT.Claims["userID"].(string)
+	if userID == "" {
+		return "", errors.New("Error: Empty userID in JWT!")
+	}
+	return userID, nil
 }

@@ -9,83 +9,58 @@ import (
 	"os"
 	"sort"
 	"time"
+	"user"
 )
 
-var cachedCommits Commits
-var cachedShas map[string]bool
-var cachedAuthors map[string]bool
-var cachedRepos map[string]bool
-var cacheTime time.Time
-var allRepos git.Repos
+var defaultUserCache git.UserCache
 
 // LoadedConfig is the name of the loaded config
 var LoadedConfig string
 
-// Commits is a sortable slice of git.Commits
-type Commits []git.Commit
-
-func (c Commits) Len() int {
-	return len(c)
-}
-func (c Commits) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
-}
-func (c Commits) Less(i, j int) bool {
-	return c[i].Time.After(c[j].Time)
-}
-
 func init() {
-	flushCommitCache()
-	cachedRepos = make(map[string]bool)
+	defaultUserCache = git.GetNewUserCache()
+	defaultUserCache.CachedRepos = make(map[string]bool)
 }
 
-func flushCommitCache() {
-	cachedCommits = Commits{}
-	cachedShas = make(map[string]bool)
-	cachedAuthors = make(map[string]bool)
-	cacheTime = time.Now().AddDate(0, 0, 1)
+func flushCommitCache(userCache git.UserCache) {
+	userCache.CachedCommits = git.Commits{}
+	userCache.CachedShas = make(map[string]bool)
+	userCache.CachedAuthors = make(map[string]bool)
+	userCache.CacheTime = time.Now().AddDate(0, 0, 1)
 }
 
-func flushRepos() {
-	allRepos = git.Repos{}
-	cachedRepos = make(map[string]bool)
+func flushRepos(userCache git.UserCache) {
+	userCache.AllRepos = git.Repos{}
+	userCache.CachedRepos = make(map[string]bool)
 }
 
-
-func sendGitCommits(from, to time.Time, allCommits chan git.Commit) {
-	if len(cachedRepos) == 0 {
-		allRepos, _ = git.GetRepositories()
+func sendGitCommits(userCache *git.UserCache, from, to time.Time, allCommits chan git.Commit) {
+	if len(userCache.CachedRepos) == 0 {
+		userCache.AllRepos, _ = git.GetRepositories(userCache.Config)
 	}
-	for _, repo := range allRepos {
+	for _, repo := range userCache.AllRepos {
 		git.CommitWaitGroup.Add(1)
-		go repo.SendAllCommitsBetween(from, to, allCommits)
+		go repo.SendAllCommitsBetween(from, to, allCommits, userCache.Config)
 	}
 	git.CommitWaitGroup.Wait()
 	close(allCommits)
-	sort.Sort(cachedCommits)
+	sort.Sort(userCache.CachedCommits)
+	user.SetUserCache(userCache.UserID, *userCache)
 	return
 }
 
-func addCommitsToCache(newCommits Commits) {
-	for _, nc := range newCommits {
-		addSingleCommitToCache(nc, false)
-	}
-	sort.Sort(cachedCommits)
-}
-
-func addSingleCommitToCache(nc git.Commit, reSort bool) (commitAdded bool) {
-	commitAdded = !cachedShas[nc.Sha]
+func addSingleCommitToCache(userCache *git.UserCache, nc git.Commit, reSort bool) (*git.UserCache, bool) {
+	commitAdded := !userCache.CachedShas[nc.Sha]
 	if commitAdded {
-		cachedShas[nc.Sha] = true
-		cachedAuthors[nc.Author] = true
-		cachedRepos[nc.Repo] = true
-		cachedCommits = append(cachedCommits, nc)
-
+		userCache.CachedShas[nc.Sha] = true
+		userCache.CachedAuthors[nc.Author] = true
+		userCache.CachedRepos[nc.Repo] = true
+		userCache.CachedCommits = append(userCache.CachedCommits, nc)
 	}
 	if reSort {
-		sort.Sort(cachedCommits)
+		sort.Sort(userCache.CachedCommits)
 	}
-	return
+	return userCache, commitAdded
 }
 
 type completeConfig struct {
@@ -94,10 +69,10 @@ type completeConfig struct {
 }
 
 // SaveCompleteConfig saves the current config as a file
-func SaveCompleteConfig(fileName string) error {
-	baseConfig := git.GetConfig()
+func SaveCompleteConfig(userCache git.UserCache, fileName string) error {
+	baseConfig := userCache.Config
 	selectedBranches := make(map[string]string)
-	for _, repo := range allRepos {
+	for _, repo := range userCache.AllRepos {
 		selectedBranches[repo.Name] = repo.SelectedBranch
 	}
 	err := saveInJSONFile(completeConfig{baseConfig, selectedBranches}, "configs", fileName)
@@ -118,7 +93,7 @@ func getSavedConfigs() (fileNames []string, err error) {
 }
 
 // LoadCompleteConfig loads a config-file
-func LoadCompleteConfig(fileName string) (err error) {
+func LoadCompleteConfig(userCache git.UserCache, fileName string) (err error) {
 	file, err := os.Open("configs/" + fileName)
 	if err != nil {
 		log.Println("Config-file not found", "configs/"+fileName)
@@ -130,13 +105,13 @@ func LoadCompleteConfig(fileName string) (err error) {
 	if err != nil {
 		log.Println("Could not parse Config-file", file.Name())
 	}
-	SetConfig(completeConfig.Baseconfig)
+	SetConfig(userCache, completeConfig.Baseconfig)
 	//reload repositories
-	GetCachedRepoObjects()
+	GetCachedRepoObjects(userCache)
 	for repo, branch := range completeConfig.SelectedBranches {
-		SetRepoBranch(repo, branch)
+		SetRepoBranch(userCache, repo, branch)
 	}
-	flushCommitCache()
+	flushCommitCache(userCache)
 	if err == nil {
 		LoadedConfig = fileName
 	}

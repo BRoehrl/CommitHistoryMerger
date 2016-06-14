@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"git"
-	"git/processor"
+	//"git/processor"
 	"log"
 	"net/http"
 	"router"
@@ -27,8 +27,8 @@ func init() {
 func main() {
 	flag.Parse()
 
-	err := processor.LoadCompleteConfig(configFlag)
-	if err != nil {
+	err := ""//processor.LoadCompleteConfig(configFlag)
+	if err != "nil" {
 		connConf = git.Config{
 			GitURL:            "https://api.github.com",
 			BaseOrganisation:  "informationgrid",
@@ -39,7 +39,7 @@ func main() {
 			connConf.GitAuthkey = authFlag
 		}
 
-		git.SetConfig(connConf)
+		//git.SetConfig(connConf)
 	}
 
 	RunCHM()

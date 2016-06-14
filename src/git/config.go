@@ -5,19 +5,20 @@ import (
 	"time"
 )
 
-var config Config
+// DefaultConfig is the default configuration
+var DefaultConfig Config
 
 func init() {
-	config = Config{
+	DefaultConfig = Config{
 		GitURL:            "https://api.github.com",
 		BaseOrganisation:  "informationgrid",
 		GitAuthkey:        "",
-		MiscDefaultBranch: "",
+		MiscDefaultBranch: "develop",
 		MaxRepos:          100,
 		MaxBranches:       100,
 	}
 
-	config.SinceTime = time.Now().AddDate(0, -2, 0)
+	DefaultConfig.SinceTime = time.Now().AddDate(0, -6, 0)
 }
 
 // Config contains all settings which can be saved
@@ -27,41 +28,53 @@ type Config struct {
 	SinceTime                                               time.Time
 }
 
-// GetConfig returns the current config
-func GetConfig() Config {
-	return config
+// GetNewConfig returns a new Confi with default values
+func GetNewConfig() (Config){
+	c := Config{}
+	c.GitURL = "https://api.github.com"
+	c.BaseOrganisation = "informationgrid"
+	c.MiscDefaultBranch = "develop"
+	c.MaxRepos = 100
+	c.MaxBranches = 100
+	c.SinceTime = time.Now().AddDate(0, -6, 0)
+	return c
 }
 
-// SetConfig updates the current Config to connData.
+// GetDefaultConfig returns the default config
+func GetDefaultConfig() Config {
+	return DefaultConfig
+}
+
+// SetConfig updates the userConfig to connData.
 // The return values indicate if the default Branch changed
 // and if all Data must be reloaded to use the updated Settings
-func SetConfig(connData Config) (updateAll, miscBranchChanged bool) {
-	if connData.GitURL != "" && connData.GitURL != config.GitURL {
-		config.GitURL = connData.GitURL
+func SetConfig(userConfig Config, connData Config) (updateAll, miscBranchChanged bool) {
+	if connData.GitURL != "" && connData.GitURL != userConfig.GitURL {
+		userConfig.GitURL = connData.GitURL
 		updateAll = true
 	}
-	if connData.BaseOrganisation != "" && config.BaseOrganisation != connData.BaseOrganisation {
-		config.BaseOrganisation = connData.BaseOrganisation
+	if connData.BaseOrganisation != "" && userConfig.BaseOrganisation != connData.BaseOrganisation {
+		userConfig.BaseOrganisation = connData.BaseOrganisation
 		updateAll = true
 	}
-	if strings.Replace(connData.GitAuthkey, "*", "", -1) != "" && config.GitAuthkey != connData.GitAuthkey {
-		config.GitAuthkey = connData.GitAuthkey
+	if strings.Replace(connData.GitAuthkey, "*", "", -1) != "" && userConfig.GitAuthkey != connData.GitAuthkey {
+		userConfig.GitAuthkey = connData.GitAuthkey
 		updateAll = true
 	}
-	if !(connData.SinceTime.Equal(config.SinceTime) || connData.SinceTime.Equal(time.Time{})) {
-		config.SinceTime = connData.SinceTime
+	if !(connData.SinceTime.Equal(userConfig.SinceTime) || connData.SinceTime.Equal(time.Time{})) {
+		userConfig.SinceTime = connData.SinceTime
 		updateAll = false
 	}
-	if connData.MaxRepos != 0 && config.MaxRepos != connData.MaxRepos {
-		config.MaxRepos = connData.MaxRepos
+	if connData.MaxRepos != 0 && userConfig.MaxRepos != connData.MaxRepos {
+		userConfig.MaxRepos = connData.MaxRepos
 		updateAll = true
 	}
-	if connData.MaxBranches != 0 && config.MaxBranches != connData.MaxBranches {
-		config.MaxBranches = connData.MaxBranches
+	if connData.MaxBranches != 0 && userConfig.MaxBranches != connData.MaxBranches {
+		userConfig.MaxBranches = connData.MaxBranches
 		updateAll = true
 	}
-	if connData.MiscDefaultBranch != "" && config.MiscDefaultBranch != connData.MiscDefaultBranch {
-		config.MiscDefaultBranch = connData.MiscDefaultBranch
+	if connData.MiscDefaultBranch != "" && userConfig.MiscDefaultBranch != connData.MiscDefaultBranch {
+		userConfig.MiscDefaultBranch = connData.MiscDefaultBranch
 		updateAll = false
 		miscBranchChanged = true
 	}

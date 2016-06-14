@@ -22,14 +22,14 @@ func init() {
 	defaultUserCache.CachedRepos = make(map[string]bool)
 }
 
-func flushCommitCache(userCache git.UserCache) {
+func flushCommitCache(userCache *git.UserCache) {
 	userCache.CachedCommits = git.Commits{}
 	userCache.CachedShas = make(map[string]bool)
 	userCache.CachedAuthors = make(map[string]bool)
 	userCache.CacheTime = time.Now().AddDate(0, 0, 1)
 }
 
-func flushRepos(userCache git.UserCache) {
+func flushRepos(userCache *git.UserCache) {
 	userCache.AllRepos = git.Repos{}
 	userCache.CachedRepos = make(map[string]bool)
 }
@@ -107,11 +107,11 @@ func LoadCompleteConfig(userCache git.UserCache, fileName string) (err error) {
 	}
 	SetConfig(userCache, completeConfig.Baseconfig)
 	//reload repositories
-	GetCachedRepoObjects(userCache)
+	GetCachedRepoObjects(&userCache)
 	for repo, branch := range completeConfig.SelectedBranches {
 		SetRepoBranch(userCache, repo, branch)
 	}
-	flushCommitCache(userCache)
+	flushCommitCache(&userCache)
 	if err == nil {
 		LoadedConfig = fileName
 	}

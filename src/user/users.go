@@ -1,10 +1,9 @@
 package user
 
 import (
-"log"
-"git"
-	)
-
+	"git"
+	"log"
+)
 
 var userIDTokens map[string](string)
 var allUserCaches map[string](git.UserCache)
@@ -42,12 +41,12 @@ func GetUserCache(userID string) git.UserCache {
 }
 
 // SetUserCache sets the UserCache of userID
-func SetUserCache(userID string, userCache git.UserCache){
+func SetUserCache(userID string, userCache git.UserCache) {
 	allUserCaches[userID] = userCache
 }
 
 // SetCachedCommits sets the CachedCommits of userID
-func SetCachedCommits(userID string, cachedCommits git.Commits){
+func SetCachedCommits(userID string, cachedCommits git.Commits) {
 	userCache := allUserCaches[userID]
 	userCache.CachedCommits = cachedCommits
 	allUserCaches[userID] = userCache

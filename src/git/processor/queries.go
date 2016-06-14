@@ -25,10 +25,10 @@ func SendCommits(userID string, query Query, commits chan git.Commit) {
 	uc := user.GetUserCache(userID)
 
 	if uc.UpdateCommits || uc.UpdateAll {
-		flushCommitCache(uc)
+		flushCommitCache(&uc)
 		uc.UpdateCommits = false
 		if uc.UpdateAll {
-			flushRepos(uc)
+			flushRepos(&uc)
 		}
 		uc.UpdateAll = false
 	}
@@ -133,12 +133,12 @@ func GetSingleCommit(userCache git.UserCache, sha string) (singleCommit git.Comm
 }
 
 // GetCacheTimeString returns the earliest date for which the commits are cached as a string
-func GetCacheTimeString(userCache git.UserCache) (cacheTimeString string) {
+func GetCacheTimeString(userCache *git.UserCache) (cacheTimeString string) {
 	return userCache.CacheTime.Format(time.RFC3339)[:10]
 }
 
 // GetCachedAuthors returns all cached authornames
-func GetCachedAuthors(userCache git.UserCache) (authors []string) {
+func GetCachedAuthors(userCache *git.UserCache) (authors []string) {
 	for key := range userCache.CachedAuthors {
 		authors = append(authors, key)
 	}
@@ -147,7 +147,7 @@ func GetCachedAuthors(userCache git.UserCache) (authors []string) {
 }
 
 // GetCachedRepos returns all cached repositorynames
-func GetCachedRepos(userCache git.UserCache) (repos []string) {
+func GetCachedRepos(userCache *git.UserCache) (repos []string) {
 	for key := range userCache.CachedRepos {
 		repos = append(repos, key)
 	}
@@ -156,7 +156,7 @@ func GetCachedRepos(userCache git.UserCache) (repos []string) {
 }
 
 // GetCachedRepoObjects returns all cached repositories
-func GetCachedRepoObjects(userCache git.UserCache) (repos git.Repos, err error) {
+func GetCachedRepoObjects(userCache *git.UserCache) (repos git.Repos, err error) {
 	if len(userCache.CachedRepos) == 0 {
 		userCache.AllRepos, err = git.GetRepositories(userCache.Config)
 	}

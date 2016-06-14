@@ -66,7 +66,7 @@ var page Page
 
 var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 
-func updatePageData(userCache git.UserCache) {
+func updatePageData(userCache *git.UserCache) {
 	page.Title = TITLE
 	page.GitClientID = "ea3fc9e6664643bd95b9"
 	page.Profiles = processor.GetSavedConfigs()
@@ -128,13 +128,14 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
 	if userID == "" {
 		log.Println("No one logged in")
-		updatePageData(git.UserCache{})
+		updatePageData(&git.UserCache{})
 	} else {
 		// ONLY FOR DEBUG
 		if _, ok := user.GetAccessToken(userID); !ok {
 			user.AddUser(userID, "89ceda67ea1d984bf95ef27b81948caadda766ad")
 		}
-		updatePageData(user.GetUserCache(userID))
+		userCache := user.GetUserCache(userID)
+		updatePageData(&userCache)
 	}
 	templates.ExecuteTemplate(w, "commits.html", page)
 }
@@ -220,7 +221,7 @@ func AuthorsShowJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userCache := user.GetUserCache(userID)
-	if err := json.NewEncoder(w).Encode(processor.GetCachedAuthors(userCache)); err != nil {
+	if err := json.NewEncoder(w).Encode(processor.GetCachedAuthors(&userCache)); err != nil {
 		panic(err)
 	}
 	w.WriteHeader(http.StatusOK)
@@ -236,10 +237,10 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	}
 	userCache := user.GetUserCache(userID)
 	authorButtons := []Buttondata{}
-	for _, author := range processor.GetCachedAuthors(userCache) {
+	for _, author := range processor.GetCachedAuthors(&userCache) {
 		authorButtons = append(authorButtons, Buttondata{author, author, "", "", 0})
 	}
-	updatePageData(userCache)
+	updatePageData(&userCache)
 	templates.ExecuteTemplate(w, "authors.html", page)
 }
 
@@ -257,7 +258,8 @@ func SettingsShow(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-	updatePageData(user.GetUserCache(userID))
+	userCache := user.GetUserCache(userID)
+	updatePageData(&userCache)
 	templates.ExecuteTemplate(w, "settings.html", page)
 }
 
@@ -277,7 +279,7 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 	}
 	userCache := user.GetUserCache(userID)
 	processor.SetConfig(userCache, config)
-	updatePageData(userCache)
+	updatePageData(&userCache)
 	templates.ExecuteTemplate(w, "settings.html", page)
 }
 
@@ -325,7 +327,7 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userCache := user.GetUserCache(userID)
-	repos, err := processor.GetCachedRepoObjects(userCache)
+	repos, err := processor.GetCachedRepoObjects(&userCache)
 	if err != nil {
 		panic(err)
 	}
@@ -340,7 +342,7 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 		repodata = append(repodata, Repodata{repo.Name, branches, len(branches)})
 
 	}
-	updatePageData(userCache)
+	updatePageData(&userCache)
 	page.RepoData = repodata
 	templates.ExecuteTemplate(w, "repositories.html", page)
 }
@@ -375,7 +377,7 @@ func ReposShow(w http.ResponseWriter, r *http.Request) {
 	}
 	userCache := user.GetUserCache(userID)
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(processor.GetCachedRepos(userCache)); err != nil {
+	if err := json.NewEncoder(w).Encode(processor.GetCachedRepos(&userCache)); err != nil {
 		panic(err)
 	}
 }

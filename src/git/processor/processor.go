@@ -35,7 +35,7 @@ func flushRepos(userCache *git.UserCache) {
 }
 
 func sendGitCommits(userCache *git.UserCache, from, to time.Time, allCommits chan git.Commit) {
-	if len(userCache.CachedRepos) == 0 {
+	if len(userCache.AllRepos) == 0 {
 		userCache.AllRepos, _ = git.GetRepositories(userCache.Config)
 	}
 	for _, repo := range userCache.AllRepos {
@@ -93,10 +93,10 @@ func getSavedConfigs() (fileNames []string, err error) {
 }
 
 // LoadCompleteConfig loads a config-file
-func LoadCompleteConfig(userCache git.UserCache, fileName string) (err error) {
-	file, err := os.Open("configs/" + fileName)
+func LoadCompleteConfig(userID string) (err error) {
+	file, err := os.Open("configs/" + userID)
 	if err != nil {
-		log.Println("Config-file not found", "configs/"+fileName)
+		log.Println("Config-file not found", "configs/"+userID)
 		return
 	}
 	decoder := json.NewDecoder(file)
@@ -105,16 +105,15 @@ func LoadCompleteConfig(userCache git.UserCache, fileName string) (err error) {
 	if err != nil {
 		log.Println("Could not parse Config-file", file.Name())
 	}
-	SetConfig(userCache, completeConfig.Baseconfig)
+	user.AddUser(userID, completeConfig.Baseconfig.GitAuthkey)
+	SetConfig(userID, completeConfig.Baseconfig)
 	//reload repositories
-	GetCachedRepoObjects(&userCache)
+	GetCachedRepoObjects(userID)
 	for repo, branch := range completeConfig.SelectedBranches {
-		SetRepoBranch(userCache, repo, branch)
+		SetRepoBranch(userID, repo, branch)
 	}
-	flushCommitCache(&userCache)
-	if err == nil {
-		LoadedConfig = fileName
-	}
+	uc := user.GetUserCache(userID)
+	flushCommitCache(&uc)
 	return
 }
 

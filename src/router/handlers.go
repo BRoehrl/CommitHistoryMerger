@@ -87,7 +87,10 @@ func gitHubSignIn(code string) (jwtBytes []byte, ID string, Error error) {
 
 	currentUser := git.GetUserFromToken(authToken)
 	stringID := strconv.Itoa(currentUser.ID)
-	user.AddUser(stringID, authToken)
+	if !user.Exists(stringID) {
+		user.AddUser(stringID, authToken)
+		processor.SaveCompleteConfig(user.GetUserCache(stringID), stringID)
+	}
 
 	token := jwtProvider.New()
 	token.Claims["userID"] = stringID
@@ -124,20 +127,36 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-type", "text/html")
-	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html", "login.html"))
 	if userID == "" {
 		log.Println("Not logged in")
 		updatePageData(&git.UserCache{})
 		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 		return
 	}
-	// if cookie valid but AccessToken not found login again
+
+	if !user.ConfigLoaded(userID) {
+		hasConfig := false
+		for _, configFileName := range processor.GetSavedConfigs() {
+			if configFileName == userID {
+				hasConfig = true
+				break
+			}
+		}
+		if hasConfig {
+			processor.LoadCompleteConfig(userID)
+			user.SetConfigLoaded(userID, true)
+		}
+	}
+
+	// if cookie valid but AccessToken not found
 	if _, ok := user.GetAccessToken(userID); !ok {
-		//user.AddUser(userID, "89ceda67ea1d984bf95ef27b81948caadda766ad")
 		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 		return
 	}
+
+	w.Header().Set("Content-type", "text/html")
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html", "login.html"))
+
 	userCache := user.GetUserCache(userID)
 	updatePageData(&userCache)
 
@@ -169,11 +188,10 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	if !user.Exists(userID){
+	if !user.Exists(userID) {
 		return
 	}
 	cacheTimeBefore := user.GetUserCache(userID).CacheTime
-
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Page-has-updates", "false")
 	vars := map[string]string{"commit": r.FormValue("commit"), "author": r.FormValue("author"), "repo": r.FormValue("repo"), "date": r.FormValue("date")}
@@ -191,7 +209,6 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 	if cacheTimeAfterQuery.Before(cacheTimeBefore) {
 		w.Header().Set("Page-has-updates", "true")
 	}
-
 
 	//For paging. On empty or error: no paging
 	page, _ := strconv.Atoi(r.FormValue("page"))
@@ -306,7 +323,8 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userCache := user.GetUserCache(userID)
-	processor.SetConfig(userCache, config)
+	processor.SetConfig(userID, config)
+	processor.SaveCompleteConfig(userCache, userID)
 	updatePageData(&userCache)
 	templates.ExecuteTemplate(w, "settings.html", page)
 }
@@ -333,12 +351,12 @@ func LoadProfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
 	vars := mux.Vars(r)
-	userID, err := checkJWTandGetUserID(r)
+	_, err = checkJWTandGetUserID(r)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	processor.LoadCompleteConfig(user.GetUserCache(userID), vars["name"])
+	processor.LoadCompleteConfig(vars["name"])
 }
 
 // ReposShowHTML handler
@@ -359,7 +377,7 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
 	}
-	repos, err := processor.GetCachedRepoObjects(&userCache)
+	repos, err := processor.GetCachedRepoObjects(userID)
 	if err != nil {
 		panic(err)
 	}
@@ -393,9 +411,8 @@ func RepoBranchChange(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	userCache := user.GetUserCache(userID)
 
-	processor.SetRepoBranch(userCache, repo, branch)
+	processor.SetRepoBranch(userID, repo, branch)
 }
 
 // ReposShow handler

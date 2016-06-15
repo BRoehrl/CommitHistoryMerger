@@ -156,7 +156,8 @@ func GetCachedRepos(userCache *git.UserCache) (repos []string) {
 }
 
 // GetCachedRepoObjects returns all cached repositories
-func GetCachedRepoObjects(userCache *git.UserCache) (repos git.Repos, err error) {
+func GetCachedRepoObjects(userID string) (repos git.Repos, err error) {
+	userCache := user.GetUserCache(userID)
 	if len(userCache.CachedRepos) == 0 {
 		userCache.AllRepos, err = git.GetRepositories(userCache.Config)
 	}
@@ -167,18 +168,21 @@ func GetCachedRepoObjects(userCache *git.UserCache) (repos git.Repos, err error)
 }
 
 // SetRepoBranch sets the branch of a repository
-func SetRepoBranch(userCache git.UserCache, repoName, branchName string) (err error) {
+func SetRepoBranch(userID string, repoName, branchName string) (err error) {
+	userCache := user.GetUserCache(userID)
 	if !userCache.CachedRepos[repoName] {
 		return errors.New("Repository not found/cached: " + repoName)
 	}
-	for i, repo := range userCache.AllRepos {
+	allRepos := userCache.AllRepos
+	for i, repo := range allRepos {
 		if repo.Name == repoName {
 			for branch := range repo.Branches {
 				if branch == branchName {
 					if repo.SelectedBranch != branch {
 						repo.SelectedBranch = branch
 						userCache.UpdateCommits = true
-						userCache.AllRepos[i] = repo
+						allRepos[i] = repo
+						userCache.AllRepos = allRepos
 					}
 					return
 				}
@@ -190,23 +194,28 @@ func SetRepoBranch(userCache git.UserCache, repoName, branchName string) (err er
 }
 
 // UpdateDefaultBranch sets the Branch of all repositories to the default branch from the config.
-func UpdateDefaultBranch(userCache git.UserCache) {
+func UpdateDefaultBranch(userID string) {
+	userCache := user.GetUserCache(userID)
 	defaultBranch := userCache.Config.MiscDefaultBranch
-	for i, repo := range userCache.AllRepos {
+	allRepos := userCache.AllRepos
+	for i, repo := range allRepos {
 		if repo.Branches[defaultBranch] != "" {
 			repo.SelectedBranch = defaultBranch
-			userCache.AllRepos[i] = repo
+			allRepos[i] = repo
 		}
 	}
+	userCache.AllRepos = allRepos
 }
 
 // SetConfig sets the config and updates the default branch if necessary
-func SetConfig(userCache git.UserCache, config git.Config) {
-	completeUpdate, miscBranchChanged := git.SetConfig(userCache.Config, config)
-	userCache.UpdateAll = completeUpdate
+func SetConfig(userID string, config git.Config) {
+	uc := user.GetUserCache(userID)
+	ucConfig := uc.Config
+	completeUpdate, miscBranchChanged := git.SetConfig(ucConfig, config)
+	uc.UpdateAll = completeUpdate
 	if miscBranchChanged {
-		UpdateDefaultBranch(userCache)
-		userCache.UpdateCommits = true
+		UpdateDefaultBranch(userID)
+		uc.UpdateCommits = true
 	}
 }
 

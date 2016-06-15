@@ -9,16 +9,7 @@ import (
 var DefaultConfig Config
 
 func init() {
-	DefaultConfig = Config{
-		GitURL:            "https://api.github.com",
-		BaseOrganisation:  "informationgrid",
-		GitAuthkey:        "",
-		MiscDefaultBranch: "develop",
-		MaxRepos:          100,
-		MaxBranches:       100,
-	}
-
-	DefaultConfig.SinceTime = time.Now().AddDate(0, -6, 0)
+	DefaultConfig = GetNewConfig()
 }
 
 // Config contains all settings which can be saved
@@ -29,7 +20,7 @@ type Config struct {
 }
 
 // GetNewConfig returns a new Confi with default values
-func GetNewConfig() (Config){
+func GetNewConfig() Config {
 	c := Config{}
 	c.GitURL = "https://api.github.com"
 	c.BaseOrganisation = "informationgrid"

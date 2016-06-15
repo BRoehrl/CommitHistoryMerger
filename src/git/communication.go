@@ -143,8 +143,8 @@ func AddBranchesToRepos(allRepos Repos, userConfig Config) (reposWithBranches Re
 	}
 
 	for repo := range repoChannel {
-		if len(reposWithBranches) >= len(allRepos) - 1 {
-			break;
+		if len(reposWithBranches) >= len(allRepos)-1 {
+			break
 		}
 		reposWithBranches = append(reposWithBranches, repo)
 	}

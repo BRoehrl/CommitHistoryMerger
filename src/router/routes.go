@@ -91,6 +91,13 @@ var routes = Routes{
 		ReposShowHTML,
 	},
 	Route{
+		"Login",
+		"GET",
+		"/login",
+		nil,
+		LoginHTML,
+	},
+	Route{
 		"RepoBranchChange",
 		"POST",
 		"/repositories",

@@ -133,19 +133,25 @@ func GetRepositories(userConfig Config) (allRepos Repos, err error) {
 	return
 }
 
+var branchWaitGroup sync.WaitGroup
+
 // AddBranchesToRepos adds to each Repository its branches
 func AddBranchesToRepos(allRepos Repos, userConfig Config) (reposWithBranches Repos, err error) {
+	repoChannel := make(chan Repo, len(allRepos))
 	for _, repo := range allRepos {
-		repo, err = addBranchesToSingleRepo(userConfig, repo)
-		if err != nil {
-			return
+		go addBranchesToSingleRepo(userConfig, repo, repoChannel)
+	}
+
+	for repo := range repoChannel {
+		if len(reposWithBranches) >= len(allRepos) - 1 {
+			break;
 		}
 		reposWithBranches = append(reposWithBranches, repo)
 	}
 	return
 }
 
-func addBranchesToSingleRepo(userConfig Config, repo Repo) (r Repo, err error) {
+func addBranchesToSingleRepo(userConfig Config, repo Repo, repoChannel chan Repo) (r Repo, err error) {
 	currentPage := 1
 	highestPageNumber := (userConfig.MaxBranches-1)/100 + 1
 	branches := []Branch{}
@@ -156,6 +162,7 @@ func addBranchesToSingleRepo(userConfig Config, repo Repo) (r Repo, err error) {
 		err = UnmarshalFromGetResponse(branchQuery, userConfig.GitAuthkey, &branchesPage)
 		branches = append(branches, branchesPage...)
 		if err != nil {
+			log.Println(err)
 			return repo, err
 		}
 		if islastPage {
@@ -171,6 +178,10 @@ func addBranchesToSingleRepo(userConfig Config, repo Repo) (r Repo, err error) {
 		repo.SelectedBranch = userConfig.MiscDefaultBranch
 	}
 	repo.Branches = branchMap
+	repoChannel <- repo
+	if err != nil {
+		log.Println(err)
+	}
 	return repo, err
 }
 

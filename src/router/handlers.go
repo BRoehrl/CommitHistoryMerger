@@ -64,7 +64,7 @@ func init() {
 
 var page Page
 
-var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
+var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html", "login.html"))
 
 func updatePageData(userCache *git.UserCache) {
 	page.Title = TITLE
@@ -125,18 +125,22 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-type", "text/html")
-	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html", "login.html"))
 	if userID == "" {
-		log.Println("No one logged in")
+		log.Println("Not logged in")
 		updatePageData(&git.UserCache{})
-	} else {
-		// ONLY FOR DEBUG
-		if _, ok := user.GetAccessToken(userID); !ok {
-			user.AddUser(userID, "89ceda67ea1d984bf95ef27b81948caadda766ad")
-		}
-		userCache := user.GetUserCache(userID)
-		updatePageData(&userCache)
+		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		return
 	}
+	// if cookie valid but AccessToken not found login again
+	if _, ok := user.GetAccessToken(userID); !ok {
+		//user.AddUser(userID, "89ceda67ea1d984bf95ef27b81948caadda766ad")
+		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		return
+	}
+	userCache := user.GetUserCache(userID)
+	updatePageData(&userCache)
+
 	templates.ExecuteTemplate(w, "commits.html", page)
 }
 
@@ -165,8 +169,13 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	if !user.Exists(userID){
+		return
+	}
+	cacheTimeBefore := user.GetUserCache(userID).CacheTime
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Page-has-updates", "false")
 	vars := map[string]string{"commit": r.FormValue("commit"), "author": r.FormValue("author"), "repo": r.FormValue("repo"), "date": r.FormValue("date")}
 	query := getQueryFromVars(vars)
 
@@ -177,6 +186,12 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 		queryResult = append(queryResult, commit)
 	}
 	sort.Sort(queryResult)
+
+	cacheTimeAfterQuery := user.GetUserCache(userID).CacheTime
+	if cacheTimeAfterQuery.Before(cacheTimeBefore) {
+		w.Header().Set("Page-has-updates", "true")
+	}
+
 
 	//For paging. On empty or error: no paging
 	page, _ := strconv.Atoi(r.FormValue("page"))
@@ -233,6 +248,9 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	userID, err := checkJWTandGetUserID(r)
 	if err != nil {
 		log.Println(err)
+	}
+	if !user.Exists(userID) {
+		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 		return
 	}
 	userCache := user.GetUserCache(userID)
@@ -244,13 +262,23 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "authors.html", page)
 }
 
+// LoginHTML handler
+func LoginHTML(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html")
+	updatePageData(&git.UserCache{})
+	templates.ExecuteTemplate(w, "login.html", page)
+}
+
 // SettingsShow handler
 func SettingsShow(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "text/html")
 	w.Header().Set("Content-type", "text/html")
 	userID, err := checkJWTandGetUserID(r)
 	if err != nil {
 		log.Println(err)
+		return
+	}
+	if !user.Exists(userID) {
+		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 		return
 	}
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
@@ -315,18 +343,22 @@ func LoadProfile(w http.ResponseWriter, r *http.Request) {
 
 // ReposShowHTML handler
 func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "text/html")
-	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
-	}
 	userID, err := checkJWTandGetUserID(r)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	if !user.Exists(userID) {
+		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		return
+	}
 	userCache := user.GetUserCache(userID)
+	w.Header().Set("Content-type", "text/html")
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
+	err = r.ParseForm()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
+	}
 	repos, err := processor.GetCachedRepoObjects(&userCache)
 	if err != nil {
 		panic(err)

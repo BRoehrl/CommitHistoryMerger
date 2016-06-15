@@ -127,6 +127,11 @@ function refreshQuery() {
     deleteButtons();
     postQueryAndAddButtons({
         'page': 1
+    }, function(request){
+        var updatePage = request.getResponseHeader('Page-Has-Updates');
+        if (updatePage === "true"){
+          location.reload();
+        }
     });
 
     query = query.replace('&', '?');
@@ -194,12 +199,12 @@ function postQueryAndAddButtons(pagination, callbackFunction) {
         type: 'POST',
         url: './commits',
         data: params,
-        success: function(data, textStatus) {
+        success: function(data, textStatus, request) {
             document.getElementById('buttonList').innerHTML += compiledButton({
                 button_data: data
             });
             latestPage = pagination.page;
-            if (typeof callbackFunction == 'function') callbackFunction();
+            if (typeof callbackFunction == 'function') callbackFunction(request);
         },
         dataType: "json",
         async: true

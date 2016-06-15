@@ -31,6 +31,12 @@ func GetAccessToken(userID string) (string, bool) {
 	return secret, ok
 }
 
+// Exists checks if a User exists
+func Exists(userID string) bool{
+	_, ok := userIDTokens[userID]
+	return ok
+}
+
 // GetUserCache returns the UserCache of userID
 func GetUserCache(userID string) git.UserCache {
 	userCache, ok := allUserCaches[userID]

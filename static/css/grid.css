@@ -118,7 +118,7 @@ h2 {
     right: 50px;
     background-color: #337ab7;
 }
-.alert-success {
+.alert-success-position {
     position: fixed;
     top: 56px;
     text-align: center;

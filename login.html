@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+	{{template "headAndNavbar.html" .}}
+		<div class="container">
+			<a class="btn btn-lg btn-info alert-success-position" href="https://github.com/login/oauth/authorize?scope=user:email&client_id={{.GitClientID}}" style="font-size: 2em;"><i class="fa fa-lg/ fa-github" aria-hidden="true"></i> Sign in with GitHub</a>
+		</div>
+		{{template "scripts.html" .}}
+	</body>
+
+</html>

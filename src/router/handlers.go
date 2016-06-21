@@ -318,8 +318,8 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	userCache := user.GetUserCache(userID)
 	processor.SetConfig(userID, config)
+	userCache := user.GetUserCache(userID)
 	processor.SaveCompleteConfig(userCache, userID)
 	updatePageData(&userCache)
 	templates.ExecuteTemplate(w, "settings.html", page)

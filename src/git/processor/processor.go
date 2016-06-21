@@ -12,16 +12,6 @@ import (
 	"user"
 )
 
-var defaultUserCache git.UserCache
-
-// LoadedConfig is the name of the loaded config
-var LoadedConfig string
-
-func init() {
-	defaultUserCache = git.GetNewUserCache()
-	defaultUserCache.CachedRepos = make(map[string]bool)
-}
-
 func flushCommitCache(userCache *git.UserCache) {
 	userCache.CachedCommits = git.Commits{}
 	userCache.CachedShas = make(map[string]bool)
@@ -79,7 +69,6 @@ func SaveCompleteConfig(userCache git.UserCache, fileName string) error {
 	if err != nil {
 		return err
 	}
-	LoadedConfig = fileName
 	return nil
 }
 
@@ -108,12 +97,12 @@ func LoadCompleteConfig(userID string) (err error) {
 	user.AddUser(userID, completeConfig.Baseconfig.GitAuthkey)
 	SetConfig(userID, completeConfig.Baseconfig)
 	//reload repositories
-	GetCachedRepoObjects(userID)
+	uc := user.GetUserCache(userID)
+	uc.AllRepos, err = GetCachedRepoObjects(userID)
+	user.SetUserCache(userID, uc)
 	for repo, branch := range completeConfig.SelectedBranches {
 		SetRepoBranch(userID, repo, branch)
 	}
-	uc := user.GetUserCache(userID)
-	flushCommitCache(&uc)
 	return
 }
 

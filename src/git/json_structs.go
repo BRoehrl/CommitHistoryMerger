@@ -19,6 +19,16 @@ type Repo struct {
 // Repos is a slice of Repo elements
 type Repos []Repo
 
+func (r Repos) Len() int {
+	return len(r)
+}
+func (r Repos) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
+func (r Repos) Less(i, j int) bool {
+	return r[i].Name < r[j].Name
+}
+
 // User is a struct for a GitHub user
 type User struct {
 	ID      int    `json:"id"`

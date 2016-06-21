@@ -60,7 +60,7 @@ func GetAuthKeyFromGit(code string) (string, error) {
 	return auRe.AccessToken, nil
 }
 
-// GetUserFromToken retuns the authTokens owner
+// GetUserFromToken returns the authTokens owner
 func GetUserFromToken(authToken string) User {
 	CurrentUser := User{}
 	UnmarshalFromGetResponse(DefaultConfig.GitURL+"/user", authToken, &CurrentUser)

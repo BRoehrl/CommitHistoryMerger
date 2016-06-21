@@ -32,9 +32,13 @@ func SendCommits(userID string, query Query, commits chan git.Commit) {
 		}
 		uc.UpdateAll = false
 	}
-	// if no date set use default Date
+	// if no date set use default Date or CacheTime. Whichever is earlier
 	if query.Since.Equal(time.Time{}) {
-		query.Since = uc.Config.SinceTime
+		if uc.CacheTime.Before(uc.Config.SinceTime){
+			query.Since = uc.CacheTime
+		}else{
+			query.Since = uc.Config.SinceTime
+		}
 	}
 
 	allCommits := make(chan git.Commit)
@@ -164,11 +168,12 @@ func GetCachedRepoObjects(userID string) (repos git.Repos, err error) {
 	for _, repo := range userCache.AllRepos {
 		userCache.CachedRepos[repo.Name] = true
 	}
+	sort.Sort(userCache.AllRepos)
 	return userCache.AllRepos, err
 }
 
 // SetRepoBranch sets the branch of a repository
-func SetRepoBranch(userID string, repoName, branchName string) (err error) {
+func SetRepoBranch(userID, repoName, branchName string) (err error) {
 	userCache := user.GetUserCache(userID)
 	if !userCache.CachedRepos[repoName] {
 		return errors.New("Repository not found/cached: " + repoName)
@@ -183,6 +188,8 @@ func SetRepoBranch(userID string, repoName, branchName string) (err error) {
 						userCache.UpdateCommits = true
 						allRepos[i] = repo
 						userCache.AllRepos = allRepos
+						user.SetUserCache(userID, userCache)
+						SaveCompleteConfig(userCache, userID)
 					}
 					return
 				}
@@ -211,12 +218,14 @@ func UpdateDefaultBranch(userID string) {
 func SetConfig(userID string, config git.Config) {
 	uc := user.GetUserCache(userID)
 	ucConfig := uc.Config
-	completeUpdate, miscBranchChanged := git.SetConfig(ucConfig, config)
+	completeUpdate, miscBranchChanged := git.SetConfig(&ucConfig, config)
 	uc.UpdateAll = completeUpdate
 	if miscBranchChanged {
 		UpdateDefaultBranch(userID)
 		uc.UpdateCommits = true
 	}
+	uc.Config = ucConfig
+	user.SetUserCache(userID, uc)
 }
 
 // GetSavedConfigs returns all saved configfilenames

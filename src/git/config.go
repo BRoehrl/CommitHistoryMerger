@@ -39,7 +39,7 @@ func GetDefaultConfig() Config {
 // SetConfig updates the userConfig to connData.
 // The return values indicate if the default Branch changed
 // and if all Data must be reloaded to use the updated Settings
-func SetConfig(userConfig Config, connData Config) (updateAll, miscBranchChanged bool) {
+func SetConfig(userConfig *Config, connData Config) (updateAll, miscBranchChanged bool) {
 	if connData.GitURL != "" && connData.GitURL != userConfig.GitURL {
 		userConfig.GitURL = connData.GitURL
 		updateAll = true

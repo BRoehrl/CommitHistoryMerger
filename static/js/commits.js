@@ -149,8 +149,14 @@ function refreshQuery() {
 function getCommit(id) {
     $.getJSON('./json/commits/' + id, function(data) {
         document.getElementById("message").innerHTML = data.Comment;
-        document.getElementById("author").innerHTML = data.Author;
-        document.getElementById("author").href = data.CreatorLink;
+        var author = document.getElementById("author");
+        author.innerHTML = data.Author;
+        author.href = data.CreatorLink;
+        if (data.CreatorLink === ""){
+          author.className = "disabledLink";
+        }else{
+          author.className = "";
+        }
         document.getElementById("sha").innerHTML = data.Sha;
         document.getElementById("repository").innerHTML = data.Repo;
         document.getElementById("date").innerHTML = data.Time;

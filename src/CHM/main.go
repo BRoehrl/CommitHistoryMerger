@@ -27,7 +27,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	err := ""//processor.LoadCompleteConfig(configFlag)
+	err := "" //processor.LoadCompleteConfig(configFlag)
 	if err != "nil" {
 		connConf = git.Config{
 			GitURL:            "https://api.github.com",

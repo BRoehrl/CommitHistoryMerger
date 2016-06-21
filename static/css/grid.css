@@ -128,3 +128,9 @@ h2 {
 .eigthy-percent {
     width: 80%;
 }
+
+.disabledLink {
+  pointer-events: none;
+  cursor: default;
+  color: inherit;
+}

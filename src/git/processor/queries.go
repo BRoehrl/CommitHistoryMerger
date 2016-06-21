@@ -34,9 +34,9 @@ func SendCommits(userID string, query Query, commits chan git.Commit) {
 	}
 	// if no date set use default Date or CacheTime. Whichever is earlier
 	if query.Since.Equal(time.Time{}) {
-		if uc.CacheTime.Before(uc.Config.SinceTime){
+		if uc.CacheTime.Before(uc.Config.SinceTime) {
 			query.Since = uc.CacheTime
-		}else{
+		} else {
 			query.Since = uc.Config.SinceTime
 		}
 	}

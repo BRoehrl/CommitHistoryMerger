@@ -26,11 +26,9 @@ import (
 type Page struct {
 	Title,
 	SinceDateString,
-	ActiveProfile,
 	GitClientID string
 	RepoData []Repodata
 	Settings git.Config
-	Profiles,
 	Authors,
 	Repos []string
 }
@@ -69,12 +67,10 @@ var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar
 func updatePageData(userCache *git.UserCache) {
 	page.Title = TITLE
 	page.GitClientID = "ea3fc9e6664643bd95b9"
-	page.Profiles = processor.GetSavedConfigs()
 	page.Authors = processor.GetCachedAuthors(userCache)
 	page.Repos = processor.GetCachedRepos(userCache)
 	page.Settings = userCache.Config
 	page.SinceDateString = processor.GetCacheTimeString(userCache) //page.Settings.SinceTime.Format(time.RFC3339)[:10]
-	page.ActiveProfile = processor.LoadedConfig
 }
 
 func gitHubSignIn(code string) (jwtBytes []byte, ID string, Error error) {

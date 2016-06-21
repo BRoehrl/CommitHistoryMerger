@@ -41,64 +41,11 @@
 						</li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
-						<!-- <li><a href="https://github.com/login/oauth/authorize?scope=user:email&client_id={{.GitClientID}}"><i class="fa fa-lg fa-github" aria-hidden="true"></i> Sign in with GitHub</a></li>
-						<li id="profileMenu" class="dropdown">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true">Profile <span class="caret"></span></a>
-							<ul class="dropdown-menu">
-								<li class="dropdown-header">Active Profile: {{.ActiveProfile}}</li>
-								<li><a href="" type="button" data-toggle="modal" data-target="#dialogSave">Save</a></li>
-								<li><a href="" type="button" data-toggle="modal" data-target="#dialogLoad">Load</a></li>
-							</ul>
-						</li> -->
 					</ul>
 				</div>
 			</div>
 		</div>
 	</nav>
-	<div id="dialogSave" class="modal fade" role="dialog">
-		<div class="modal-dialog modal-sm">
-			<div class="modal-content">
-				<div class="modal-body">
-					<p>
-						<label for="profileName">Please enter Profile name</label>
-					</p>
-					<p>
-						<select class="combobox input form-control" id=profileName type=text>
-							<option></option>
-							{{range .Profiles}}
-							<option value="{{.}}">{{.}}</option>
-							{{end}}
-						</select>
-					</p>
-					<p>
-						<button onclick="saveProfile()" type="button" class="btn btn-default" data-dismiss="modal">Save</button>
-						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div id="dialogLoad" class="modal fade" role="dialog">
-		<div class="modal-dialog modal-sm">
-			<div class="modal-content">
-				<div class="modal-body">
-					<p>
-						<label for="selectedProfile">Please select a Profile</label>
-					</p>
-					<p>
-						<select class="form-control" id="selectedProfile">
-							{{range .Profiles}}
-							<option value="{{.}}">{{.}}</option>{{end}}
-						</select>
-					</p>
-					<p>
-						<button onclick="loadProfile()" type="button" class="btn btn-default" data-dismiss="modal">Load</button>
-						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
 	<div id="pleaseWaitDialog" class="modal fade">
 		<div class="modal-dialog modal-sm">
 			<div class="modal-content">

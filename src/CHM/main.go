@@ -12,35 +12,31 @@ import (
 
 var connConf git.Config
 var authFlag string
-var configFlag string
-var portFlag int
+var serverConfigFlag string
+var port string
 var host string
 
 func init() {
-	flag.StringVar(&authFlag, "auth", "", "Git Basic Authentification key")
-	flag.StringVar(&configFlag, "conf", "default", "Use existing config (overwrittes auth flag)")
-	flag.IntVar(&portFlag, "port", 2506, "Webserver port")
-	flag.StringVar(&host, "host", "127.0.0.1", "Webserver host IP")
+	flag.StringVar(&serverConfigFlag, "conf", "server.rc", "server.rc path")
+	flag.StringVar(&port, "port", "", "Webserver port (if set overwrites server.rc config)")
+	flag.StringVar(&host, "host", "", "Webserver host IP (if set overwrites server.rc config)")
 
 }
 
 func main() {
 	flag.Parse()
 
-	err := "" //processor.LoadCompleteConfig(configFlag)
-	if err != "nil" {
-		connConf = git.Config{
-			GitURL:            "https://api.github.com",
-			BaseOrganisation:  "informationgrid",
-			MiscDefaultBranch: "develop",
-			GitAuthkey:        ""}
-
-		if authFlag != "" {
-			connConf.GitAuthkey = authFlag
-		}
-
-		//git.SetConfig(connConf)
+	err := router.LoadServerConfig(serverConfigFlag)
+	if err != nil {
+		log.Panicln(err)
 	}
+	if port == "" {
+		port = router.GlobalServerConfig.Port
+	}
+	if host == "" {
+		host = router.GlobalServerConfig.HostIP
+	}
+	router.InitJWT()
 
 	RunCHM()
 
@@ -53,7 +49,7 @@ func RunCHM() {
 
 	router := router.NewRouter()
 
-	addr := fmt.Sprintf("%s:%d", host, portFlag)
+	addr := fmt.Sprintf("%s:%s", host, port)
 	fmt.Println("starting server on:", addr)
 	err := http.ListenAndServe(addr, router)
 	if err != nil {

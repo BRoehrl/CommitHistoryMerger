@@ -56,8 +56,9 @@ const (
 
 var jwtProvider jwts.Provider
 
-func init() {
-	jwtProvider = jwts.New([]byte("SECRET"), jwts.Config{Method: jwt.SigningMethodHS256, TTL: 3600 * 24 * 3})
+// InitJWT intilialises the json web tocken Provider
+func InitJWT() {
+	jwtProvider = jwts.New([]byte(GlobalServerConfig.JWTSecret), jwts.Config{Method: jwt.SigningMethodHS256, TTL: 3600 * 24 * 3})
 }
 
 var page Page
@@ -75,7 +76,7 @@ func updatePageData(userCache *git.UserCache) {
 
 func gitHubSignIn(code string) (jwtBytes []byte, ID string, Error error) {
 
-	authToken, err := git.GetAuthKeyFromGit(code)
+	authToken, err := git.GetAuthKeyFromGit(code, GlobalServerConfig.GitClientID, GlobalServerConfig.GitClientSecret)
 	if err != nil {
 		log.Println(err)
 		return nil, "", err

@@ -23,11 +23,11 @@ var RateLimitReset int
 var islastPage bool
 
 // GetAuthKeyFromGit TODO
-func GetAuthKeyFromGit(code string) (string, error) {
+func GetAuthKeyFromGit(code, clientID, clientSecret string) (string, error) {
 	client := &http.Client{}
 	form := url.Values{}
-	form.Add("client_id", "ea3fc9e6664643bd95b9")
-	form.Add("client_secret", "e71f2a197138b8e984a67ee2010ef3463dc5d473")
+	form.Add("client_id", clientID)
+	form.Add("client_secret", clientSecret)
 	form.Add("code", code)
 	req, err := http.NewRequest("POST", "https://github.com/login/oauth/access_token", strings.NewReader(form.Encode()))
 	if err != nil {

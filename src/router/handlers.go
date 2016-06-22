@@ -289,6 +289,7 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 func LoginHTML(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 	updatePageData(&git.UserCache{})
+	templates = template.Must(template.ParseFiles("headAndNavbar.html", "scripts.html", "login.html"))
 	templates.ExecuteTemplate(w, "login.html", page)
 }
 
@@ -298,7 +299,6 @@ func SettingsShow(w http.ResponseWriter, r *http.Request) {
 	userID, err := checkJWTandGetUserID(r)
 	if err != nil {
 		log.Println(err)
-		return
 	}
 	if !user.Exists(userID) {
 		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
@@ -335,42 +335,11 @@ func SettingsPost(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "settings.html", page)
 }
 
-// SaveProfile handler
-func SaveProfile(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
-	}
-	vars := mux.Vars(r)
-	userID, err := checkJWTandGetUserID(r)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	processor.SaveCompleteConfig(user.GetUserCache(userID), vars["name"])
-}
-
-// LoadProfile handler
-func LoadProfile(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)
-	}
-	vars := mux.Vars(r)
-	_, err = checkJWTandGetUserID(r)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	processor.LoadCompleteConfig(vars["name"])
-}
-
 // ReposShowHTML handler
 func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 	userID, err := checkJWTandGetUserID(r)
 	if err != nil {
 		log.Println(err)
-		return
 	}
 	if !user.Exists(userID) {
 		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
@@ -378,7 +347,7 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 	}
 	userCache := user.GetUserCache(userID)
 	w.Header().Set("Content-type", "text/html")
-	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
+	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html", "login.html"))
 	err = r.ParseForm()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing url %v", err), 500)

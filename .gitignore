@@ -4,4 +4,4 @@ pkg/
 configs/
 .jshintrc
 .settings/
-server.rc
+server.cfg

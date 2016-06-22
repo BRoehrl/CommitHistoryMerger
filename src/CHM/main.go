@@ -17,9 +17,9 @@ var port string
 var host string
 
 func init() {
-	flag.StringVar(&serverConfigFlag, "conf", "server.rc", "server.rc path")
-	flag.StringVar(&port, "port", "", "Webserver port (if set overwrites server.rc config)")
-	flag.StringVar(&host, "host", "", "Webserver host IP (if set overwrites server.rc config)")
+	flag.StringVar(&serverConfigFlag, "conf", "server.cfg", "server.cfg path")
+	flag.StringVar(&port, "port", "", "Webserver port (if set overwrites server.cfg config)")
+	flag.StringVar(&host, "host", "", "Webserver host IP (if set overwrites server.cfg config)")
 
 }
 

@@ -12,15 +12,20 @@ import (
 	"time"
 )
 
-// RateLimit is the RateLimit for GitHub API queries
-var RateLimit int
+// ResponseMetaData contains all necessary Metadata from a GitHub API response
+type ResponseMetaData struct {
+	RateLimit,
+	RateLimitRemaining,
+	RateLimitReset int
+	IslastPage bool
+}
 
-// RateLimitRemaining is the number of request remaining until the next ratelimit reset
-var RateLimitRemaining int
+// AuthTokenToLastResponse maps the metadata of the last response to the respective AuthToken
+var AuthTokenToLastResponse map[string](ResponseMetaData)
 
-// RateLimitReset is the time left until the next ratelimit reset
-var RateLimitReset int
-var islastPage bool
+func init() {
+	AuthTokenToLastResponse = make(map[string](ResponseMetaData))
+}
 
 // GetAuthKeyFromGit TODO
 func GetAuthKeyFromGit(code, clientID, clientSecret string) (string, error) {
@@ -67,7 +72,7 @@ func GetUserFromToken(authToken string) User {
 	return CurrentUser
 }
 
-func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
+func getResponse(url, baseAuthkey string) (resp *http.Response, responseMeta ResponseMetaData, err error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -78,27 +83,25 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, err error) {
 	if err != nil {
 		return
 	}
-	RateLimit, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Limit"))
-	RateLimitRemaining, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Remaining"))
-	RateLimitReset, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Reset"))
-	RateLimitRemaining, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Remaining"))
-	RateLimitReset, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Reset"))
-	islastPage = true
+	responseMeta.RateLimit, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Limit"))
+	responseMeta.RateLimitRemaining, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Remaining"))
+	responseMeta.RateLimitReset, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Reset"))
+	responseMeta.IslastPage = true
 	//check if only one page
 	if link := resp.Header.Get("Link"); link != "" {
 		//check if on last page
 		if strings.Contains(link, "rel=\"next\"") {
-			islastPage = false
+			responseMeta.IslastPage = false
 		}
 	}
-
+	AuthTokenToLastResponse[baseAuthkey] = responseMeta
 	return
 }
 
 // UnmarshalFromGetResponse unmarshals the json response of a git api call
 // into an interface i
-func UnmarshalFromGetResponse(url, authKey string, i interface{}) (err error) {
-	resp, err := getResponse(url, authKey)
+func UnmarshalFromGetResponse(url, authKey string, i interface{}) (responseMetaData ResponseMetaData, err error) {
+	resp, responseMetaData, err := getResponse(url, authKey)
 	if err != nil {
 		return
 	}
@@ -113,19 +116,20 @@ func UnmarshalFromGetResponse(url, authKey string, i interface{}) (err error) {
 
 // GetRepositories returns all or userConfig.MaxRepos repositories of the baseOrganisation.
 func GetRepositories(userConfig Config) (allRepos Repos, err error) {
+	var responseMetaData ResponseMetaData
 	currentPage := 1
 	highestPageNumber := (userConfig.MaxRepos-1)/100 + 1
 	for currentPage <= highestPageNumber {
 		repoQuery := userConfig.GitURL + "/orgs/" + userConfig.BaseOrganisation + "/repos?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var reposPage Repos
-		err = UnmarshalFromGetResponse(repoQuery, userConfig.GitAuthkey, &reposPage)
+		responseMetaData, err = UnmarshalFromGetResponse(repoQuery, userConfig.GitAuthkey, &reposPage)
 		if err != nil {
 			return
 		}
 		allRepos = append(allRepos, reposPage...)
 
-		if islastPage {
+		if responseMetaData.IslastPage {
 			break
 		}
 	}
@@ -152,6 +156,7 @@ func AddBranchesToRepos(allRepos Repos, userConfig Config) (reposWithBranches Re
 }
 
 func addBranchesToSingleRepo(userConfig Config, repo Repo, repoChannel chan Repo) (r Repo, err error) {
+	var responseMetaData ResponseMetaData
 	currentPage := 1
 	highestPageNumber := (userConfig.MaxBranches-1)/100 + 1
 	branches := []Branch{}
@@ -159,13 +164,13 @@ func addBranchesToSingleRepo(userConfig Config, repo Repo, repoChannel chan Repo
 		branchQuery := userConfig.GitURL + "/repos/" + userConfig.BaseOrganisation + "/" + repo.Name + "/branches?per_page=100&page=" + strconv.Itoa(currentPage)
 		currentPage++
 		var branchesPage []Branch
-		err = UnmarshalFromGetResponse(branchQuery, userConfig.GitAuthkey, &branchesPage)
+		responseMetaData, err = UnmarshalFromGetResponse(branchQuery, userConfig.GitAuthkey, &branchesPage)
 		branches = append(branches, branchesPage...)
 		if err != nil {
 			log.Println(err)
 			return repo, err
 		}
-		if islastPage {
+		if responseMetaData.IslastPage {
 			break
 		}
 	}
@@ -200,7 +205,7 @@ func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit, u
 
 		currentPage++
 		var singlePage []JSONCommit
-		err := UnmarshalFromGetResponse(query, userConfig.GitAuthkey, &singlePage)
+		responseMetaData, err := UnmarshalFromGetResponse(query, userConfig.GitAuthkey, &singlePage)
 		for _, gitCom := range singlePage {
 			newCommit := Commit{
 				Sha:         gitCom.Sha,
@@ -215,7 +220,7 @@ func (r Repo) SendAllCommitsBetween(from, to time.Time, allComits chan Commit, u
 			allComits <- newCommit
 		}
 
-		if err != nil || islastPage {
+		if err != nil || responseMetaData.IslastPage {
 			break
 		}
 	}

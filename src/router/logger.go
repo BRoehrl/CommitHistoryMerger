@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"user"
 )
 
 func init() {
@@ -27,15 +28,21 @@ func Logger(inner http.Handler, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
+		userID, _ := checkJWTandGetUserID(r)
 		inner.ServeHTTP(w, r)
 
+		duration := time.Since(start)
+
+		authToken, _ := user.GetAccessToken(userID)
+		metaData := git.AuthTokenToLastResponse[authToken]
 		log.Printf(
-			"%s\t%s\t%s\t%s\t%s",
+			"%s\t%s\t%s\t%s\t%s\t%s",
 			r.Method,
 			r.RequestURI,
 			name,
-			time.Since(start),
-			fmt.Sprint(git.RateLimitRemaining, "/", git.RateLimit),
+			duration,
+			userID,
+			fmt.Sprint(metaData.RateLimitRemaining, "/", metaData.RateLimit),
 		)
 	})
 }

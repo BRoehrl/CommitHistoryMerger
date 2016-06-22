@@ -2,7 +2,26 @@
 <html lang="en">
 	{{template "headAndNavbar.html" .}}
 		<div class="container">
-			<a class="btn btn-lg btn-info alert-success-position" href="https://github.com/login/oauth/authorize?scope=user:email&client_id={{.GitClientID}}" style="font-size: 2em;"><i class="fa fa-lg/ fa-github" aria-hidden="true"></i> Sign in with GitHub</a>
+			<div class="jumbotron loginJumbotron text-center">
+				<a class="btn btn-lg btn-info" href="https://github.com/login/oauth/authorize?scope=user:email&client_id={{.GitClientID}}" style="font-size: 2em;"><i class="fa fa-lg/ fa-github" aria-hidden="true"></i> Sign in with GitHub</a>
+				<hr>
+				<p>Sign in with GitHub to use your own GitHub API quota.</p>
+				<div class="btn btn-default btn-xs loginAltButton pull-right" data-toggle="modal" data-target="#dialogNoAccount">don't use account</div>
+			</div>
+		</div>
+		<div id="dialogNoAccount" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content padding-sm">
+					<div class="modal-body text-center">
+						<h4>Are you sure you don't want to sign in?</h4>
+						<h4>The usability would be reduced dratically</h4>
+					</div>
+					<div class="modal-footer padding-sm">
+						<button onclick="alert('Not Implemented yet')" type="button" class="btn btn-primary" data-dismiss="modal">Continue</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
 		</div>
 		{{template "scripts.html" .}}
 	</body>

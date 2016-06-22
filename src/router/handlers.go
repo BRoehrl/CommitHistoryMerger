@@ -102,7 +102,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var token *jwt.Token
 	// if redirected from github login
-	if code, ok := vars["githubLoginCode"]; ok {
+	code, redirectedFromGithub := vars["githubLoginCode"]
+	if redirectedFromGithub {
 		var newJwtBytes []byte
 		token, userID, err = gitHubSignIn(code)
 		if err != nil {
@@ -123,7 +124,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 	}
-
 	if userID == "" {
 		log.Println("Not logged in")
 		updatePageData(&git.UserCache{})
@@ -145,11 +145,14 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// when config is loaded check JWT again against timestamp
-		_, err = checkJWTandGetUserID(r)
-		if err != nil {
-			log.Println(err)
-			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
-			return
+		// but skip if new sign in (redirected from github) -> no jwt in request
+		if !redirectedFromGithub {
+			_, err = checkJWTandGetUserID(r)
+			if err != nil {
+				log.Println(err)
+				http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+				return
+			}
 		}
 	}
 

@@ -14,12 +14,17 @@ func init() {
 
 // Config contains all settings which can be saved
 type Config struct {
-	GitURL, BaseOrganisation, GitAuthkey, MiscDefaultBranch string
-	MaxRepos, MaxBranches                                   int
-	SinceTime                                               time.Time
+	GitURL,
+	BaseOrganisation,
+	GitAuthkey,
+	MiscDefaultBranch,
+	JWTissuedAt string
+	MaxRepos,
+	MaxBranches int
+	SinceTime time.Time
 }
 
-// GetNewConfig returns a new Confi with default values
+// GetNewConfig returns a new Config with default values
 func GetNewConfig() Config {
 	c := Config{}
 	c.GitURL = "https://api.github.com"
@@ -68,6 +73,9 @@ func SetConfig(userConfig *Config, connData Config) (updateAll, miscBranchChange
 		userConfig.MiscDefaultBranch = connData.MiscDefaultBranch
 		updateAll = false
 		miscBranchChanged = true
+	}
+	if connData.JWTissuedAt != "" {
+		userConfig.JWTissuedAt = connData.JWTissuedAt
 	}
 	return
 }

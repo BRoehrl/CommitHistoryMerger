@@ -74,7 +74,7 @@ func updatePageData(userCache *git.UserCache) {
 	page.SinceDateString = processor.GetCacheTimeString(userCache) //page.Settings.SinceTime.Format(time.RFC3339)[:10]
 }
 
-func gitHubSignIn(code string) (jwtBytes []byte, ID string, Error error) {
+func gitHubSignIn(code string) (jwtBytes *jwt.Token, ID string, Error error) {
 
 	authToken, err := git.GetAuthKeyFromGit(code, GlobalServerConfig.GitClientID, GlobalServerConfig.GitClientSecret)
 	if err != nil {
@@ -91,12 +91,7 @@ func gitHubSignIn(code string) (jwtBytes []byte, ID string, Error error) {
 
 	token := jwtProvider.New()
 	token.Claims["userID"] = stringID
-	tokenBytes, err := jwtProvider.Sign(token)
-	if err != nil {
-		log.Println(err)
-		return nil, "", err
-	}
-	return tokenBytes, stringID, nil
+	return token, stringID, nil
 }
 
 // Index handler
@@ -105,12 +100,17 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 	var userID string
 	var err error
+	var token *jwt.Token
 	// if redirected from github login
 	if code, ok := vars["githubLoginCode"]; ok {
 		var newJwtBytes []byte
-		newJwtBytes, userID, err = gitHubSignIn(code)
+		token, userID, err = gitHubSignIn(code)
 		if err != nil {
 			// TODO
+			log.Println(err)
+		}
+		newJwtBytes, err = jwtProvider.Sign(token)
+		if err != nil {
 			log.Println(err)
 		}
 		expiration := time.Now().Add(24 * 7 * time.Hour)
@@ -143,6 +143,14 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			processor.LoadCompleteConfig(userID)
 			user.SetConfigLoaded(userID, true)
 		}
+
+		// when config is loaded check JWT again against timestamp
+		_, err = checkJWTandGetUserID(r)
+		if err != nil {
+			log.Println(err)
+			http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+			return
+		}
 	}
 
 	// if cookie valid but AccessToken not found
@@ -153,7 +161,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "text/html")
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html", "login.html"))
-
 	userCache := user.GetUserCache(userID)
 	updatePageData(&userCache)
 
@@ -162,18 +169,20 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 // RefreshJWT refreshes the JWT cookie
 func RefreshJWT(w http.ResponseWriter, r *http.Request) {
-	JWT, err := jwtProvider.Get(r)
+	userID, err := checkJWTandGetUserID(r)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	freshToken := jwtProvider.New()
-	freshToken.Claims["userID"] = JWT.Claims["userID"]
+	freshToken.Claims["userID"] = userID
 	expiration := time.Now().Add(24 * 7 * time.Hour)
 	freshTokenBytes, err := jwtProvider.Sign(freshToken)
 	if err != nil {
 		log.Fatalln(err)
 	}
+	updateIssuedAt(userID, freshToken.Claims["iatStr"].(string))
 	cookie := http.Cookie{Name: "jwt", Value: string(freshTokenBytes), Expires: expiration}
 	http.SetCookie(w, &cookie)
 }
@@ -515,5 +524,26 @@ func checkJWTandGetUserID(r *http.Request) (string, error) {
 	if userID == "" {
 		return "", errors.New("Error: Empty userID in JWT!")
 	}
+	if JWT.Claims["iatStr"] == nil {
+		return "", errors.New("Error: JWT valid but no claim 'iatStr'!")
+	}
+	issuedAt := JWT.Claims["iatStr"].(string)
+	// if user isn't created yet there should be no previous issuedAt time
+	if user.Exists(userID) {
+		userConfig := user.GetUserCache(userID).Config
+		if issuedAt < userConfig.JWTissuedAt {
+			return "", errors.New("Error: JWT valid but expired! (not the latest one)")
+		}
+	}
+
 	return userID, nil
+}
+
+func updateIssuedAt(userID string, issuedAt string) {
+	cache := user.GetUserCache(userID)
+	config := cache.Config
+	config.JWTissuedAt = issuedAt
+	cache.Config = config
+	user.SetUserCache(userID, cache)
+	processor.SaveCompleteConfig(cache, userID)
 }

@@ -6,6 +6,7 @@
 package jwts
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -77,6 +78,7 @@ func (m *Manager) setDefaults() {
 func (m *Manager) New() *jwt.Token {
 	token := jwt.New(m.method)
 	token.Claims["iat"] = time.Now().Unix()
+	token.Claims["iatStr"] = fmt.Sprintf("%v", time.Now().Unix())
 	d := time.Duration(m.ttl) * time.Second
 	token.Claims["exp"] = time.Now().Add(d).Unix()
 	return token

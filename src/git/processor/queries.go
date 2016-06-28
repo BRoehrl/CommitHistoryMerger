@@ -226,6 +226,7 @@ func SetConfig(userID string, config git.Config) {
 	}
 	uc.Config = ucConfig
 	user.SetUserCache(userID, uc)
+	SaveCompleteConfig(uc, userID)
 }
 
 // GetSavedConfigs returns all saved configfilenames

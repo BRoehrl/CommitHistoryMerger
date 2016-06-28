@@ -127,7 +127,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if userID == "" {
 		log.Println("Not logged in")
 		updatePageData(&git.UserCache{})
-		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
@@ -150,7 +150,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			_, err = checkJWTandGetUserID(r)
 			if err != nil {
 				log.Println(err)
-				http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+				http.Redirect(w, r, "/login", http.StatusFound)
 				return
 			}
 		}
@@ -158,7 +158,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 	// if cookie valid but AccessToken not found
 	if _, ok := user.GetAccessToken(userID); !ok {
-		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
@@ -200,9 +200,17 @@ func CommitsShowJSON(w http.ResponseWriter, r *http.Request) {
 	if !user.Exists(userID) {
 		return
 	}
+	authToken, _ := user.GetAccessToken(userID)
 	cacheTimeBefore := user.GetUserCache(userID).CacheTime
+	metaData := git.AuthTokenToLastResponse[authToken]
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Page-has-updates", "false")
+	w.Header().Set("Last-GitHub-Response-RateLimit", strconv.Itoa(metaData.RateLimit))
+	w.Header().Set("Last-GitHub-Response-RateLimitRemaining", strconv.Itoa(metaData.RateLimitRemaining))
+	w.Header().Set("Last-GitHub-Response-RateLimitReset", strconv.Itoa(metaData.RateLimitReset))
+	w.Header().Set("Last-GitHub-Response-Status", metaData.Status)
+
 	vars := map[string]string{"commit": r.FormValue("commit"), "author": r.FormValue("author"), "repo": r.FormValue("repo"), "date": r.FormValue("date")}
 	query := getQueryFromVars(vars)
 
@@ -276,7 +284,7 @@ func AuthorsShow(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if !user.Exists(userID) {
-		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 	userCache := user.GetUserCache(userID)
@@ -304,7 +312,7 @@ func SettingsShow(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if !user.Exists(userID) {
-		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 	templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar.html", "repositories.html", "settings.html", "authors.html", "scripts.html"))
@@ -345,7 +353,7 @@ func ReposShowHTML(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	if !user.Exists(userID) {
-		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 	userCache := user.GetUserCache(userID)

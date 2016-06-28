@@ -2,6 +2,7 @@ package git
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,6 +18,7 @@ type ResponseMetaData struct {
 	RateLimit,
 	RateLimitRemaining,
 	RateLimitReset int
+	Status     string
 	IslastPage bool
 }
 
@@ -68,7 +70,10 @@ func GetAuthKeyFromGit(code, clientID, clientSecret string) (string, error) {
 // GetUserFromToken returns the authTokens owner
 func GetUserFromToken(authToken string) User {
 	CurrentUser := User{}
-	UnmarshalFromGetResponse(DefaultConfig.GitURL+"/user", authToken, &CurrentUser)
+	_, err := UnmarshalFromGetResponse(DefaultConfig.GitURL+"/user", authToken, &CurrentUser)
+	if err != nil {
+		log.Println(err)
+	}
 	return CurrentUser
 }
 
@@ -78,7 +83,9 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, responseMeta Res
 	if err != nil {
 		return
 	}
-	req.Header.Set("Authorization", "token "+baseAuthkey)
+	if baseAuthkey != "" {
+		req.Header.Set("Authorization", "token "+baseAuthkey)
+	}
 	resp, err = client.Do(req)
 	if err != nil {
 		return
@@ -86,6 +93,7 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, responseMeta Res
 	responseMeta.RateLimit, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Limit"))
 	responseMeta.RateLimitRemaining, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Remaining"))
 	responseMeta.RateLimitReset, err = strconv.Atoi(resp.Header.Get("X-RateLimit-Reset"))
+	responseMeta.Status = resp.Status
 	responseMeta.IslastPage = true
 	//check if only one page
 	if link := resp.Header.Get("Link"); link != "" {
@@ -95,6 +103,9 @@ func getResponse(url, baseAuthkey string) (resp *http.Response, responseMeta Res
 		}
 	}
 	AuthTokenToLastResponse[baseAuthkey] = responseMeta
+	if resp.StatusCode != 200 {
+		err = errors.New(resp.Status)
+	}
 	return
 }
 

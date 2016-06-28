@@ -25,8 +25,12 @@ func flushRepos(userCache *git.UserCache) {
 }
 
 func sendGitCommits(userCache *git.UserCache, from, to time.Time, allCommits chan git.Commit) {
+	var err error
 	if len(userCache.AllRepos) == 0 {
-		userCache.AllRepos, _ = git.GetRepositories(userCache.Config)
+		userCache.AllRepos, err = git.GetRepositories(userCache.Config)
+	}
+	if err != nil {
+		log.Println(err)
 	}
 	for _, repo := range userCache.AllRepos {
 		git.CommitWaitGroup.Add(1)

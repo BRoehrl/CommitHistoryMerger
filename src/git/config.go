@@ -71,7 +71,7 @@ func SetConfig(userConfig *Config, connData Config) (updateAll, miscBranchChange
 	}
 	if connData.MiscDefaultBranch != "" && userConfig.MiscDefaultBranch != connData.MiscDefaultBranch {
 		userConfig.MiscDefaultBranch = connData.MiscDefaultBranch
-		updateAll = false
+		updateAll = true
 		miscBranchChanged = true
 	}
 	if connData.JWTissuedAt != "" {

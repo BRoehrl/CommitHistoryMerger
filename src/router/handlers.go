@@ -19,7 +19,6 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 )
 
 // Page contains all data needed to Render the HTML files
@@ -435,11 +434,6 @@ func ShowSingleCommit(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(processor.GetSingleCommit(userCache, sha)); err != nil {
 		panic(err)
 	}
-}
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
 }
 
 func getQueryFromVars(vars map[string]string) processor.Query {

@@ -19,13 +19,13 @@ window.onload = function() {
 
 $('#tagBar').on('beforeItemAdd', function(event) {
     if (event.item.indexOf(':') == -1) {
-      event.cancel = true;
-      return;
+        event.cancel = true;
+        return;
     }
     // valid identifiers (author, repo, since, date)
-    if('arsd'.indexOf(event.item[0].toLowerCase())  == -1) {
-      event.cancel = true;
-      return;
+    if ('arsd'.indexOf(event.item[0].toLowerCase()) == -1) {
+        event.cancel = true;
+        return;
     }
 });
 
@@ -127,10 +127,10 @@ function refreshQuery() {
     deleteButtons();
     postQueryAndAddButtons({
         'page': 1
-    }, function(request){
+    }, function(request) {
         var updatePage = request.getResponseHeader('Page-Has-Updates');
-        if (updatePage === "true"){
-          location.reload();
+        if (updatePage === "true") {
+            location.reload();
         }
     });
 
@@ -146,20 +146,23 @@ function refreshQuery() {
     }
 }
 
+var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 function getCommit(id) {
     $.getJSON('./json/commits/' + id, function(data) {
         document.getElementById("message").innerHTML = data.Comment;
         var author = document.getElementById("author");
         author.innerHTML = data.Author;
         author.href = data.CreatorLink;
-        if (data.CreatorLink === ""){
-          author.className = "disabledLink";
-        }else{
-          author.className = "";
+        if (data.CreatorLink === "") {
+            author.className = "disabledLink";
+        } else {
+            author.className = "";
         }
         document.getElementById("sha").innerHTML = data.Sha;
         document.getElementById("repository").innerHTML = data.Repo;
-        document.getElementById("date").innerHTML = data.Time;
+        var cDate = new Date(data.Time);
+        document.getElementById("date").innerHTML = cDate.getDate() + " " + MONTHS[cDate.getMonth()].substring(0, 3) + " " + (cDate.getFullYear() + ", ").substring(2, 6) + cDate.toLocaleTimeString();
         document.getElementById("link").href = data.Link;
         document.getElementById("link").innerHTML = '../commit/' + data.Sha;
     });

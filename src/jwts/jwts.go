@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/request"
 )
 
 const defaultTTL = 3600 * 24 * 7 // 1 week
@@ -77,10 +78,11 @@ func (m *Manager) setDefaults() {
 // the standard JWT signed string representation.
 func (m *Manager) New() *jwt.Token {
 	token := jwt.New(m.method)
-	token.Claims["iat"] = time.Now().Unix()
-	token.Claims["iatStr"] = fmt.Sprintf("%v", time.Now().Unix())
+	claims := token.Claims.(jwt.MapClaims)
+	claims["iat"] = time.Now().Unix()
+	claims["iatStr"] = fmt.Sprintf("%v", time.Now().Unix())
 	d := time.Duration(m.ttl) * time.Second
-	token.Claims["exp"] = time.Now().Add(d).Unix()
+	claims["exp"] = time.Now().Add(d).Unix()
 	return token
 }
 
@@ -99,10 +101,10 @@ func (m *Manager) Get(req *http.Request) (*jwt.Token, error) {
 	if jwtString == "" {
 		cookie, err := req.Cookie("jwt")
 		if err != nil {
-			return nil, jwt.ErrNoTokenInRequest
+			return nil, request.ErrNoTokenInRequest
 		}
 		if cookie.Value == "" {
-			return nil, jwt.ErrNoTokenInRequest
+			return nil, request.ErrNoTokenInRequest
 		}
 		jwtString = cookie.Value
 	}
@@ -111,7 +113,7 @@ func (m *Manager) Get(req *http.Request) (*jwt.Token, error) {
 		// token parsed, exp/nbf checks out, signature verified, Valid is true
 		return token, nil
 	}
-	return nil, jwt.ErrNoTokenInRequest
+	return nil, request.ErrNoTokenInRequest
 }
 
 // getKey accepts an unverified JWT and returns the signing/verification key.

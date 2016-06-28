@@ -89,7 +89,8 @@ func gitHubSignIn(code string) (jwtBytes *jwt.Token, ID string, Error error) {
 	}
 
 	token := jwtProvider.New()
-	token.Claims["userID"] = stringID
+	claims := token.Claims.(jwt.MapClaims)
+	claims["userID"] = stringID
 	return token, stringID, nil
 }
 
@@ -178,13 +179,14 @@ func RefreshJWT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	freshToken := jwtProvider.New()
-	freshToken.Claims["userID"] = userID
+	claims := freshToken.Claims.(jwt.MapClaims)
+	claims["userID"] = userID
 	expiration := time.Now().Add(24 * 7 * time.Hour)
 	freshTokenBytes, err := jwtProvider.Sign(freshToken)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	updateIssuedAt(userID, freshToken.Claims["iatStr"].(string))
+	updateIssuedAt(userID, claims["iatStr"].(string))
 	cookie := http.Cookie{Name: "jwt", Value: string(freshTokenBytes), Expires: expiration}
 	http.SetCookie(w, &cookie)
 }
@@ -494,14 +496,15 @@ func checkJWTandGetUserID(r *http.Request) (string, error) {
 		// TODO no one logged in
 		return "", err
 	}
-	userID = JWT.Claims["userID"].(string)
+	claims := JWT.Claims.(jwt.MapClaims)
+	userID = claims["userID"].(string)
 	if userID == "" {
 		return "", errors.New("Error: Empty userID in JWT!")
 	}
-	if JWT.Claims["iatStr"] == nil {
+	if claims["iatStr"] == nil {
 		return "", errors.New("Error: JWT valid but no claim 'iatStr'!")
 	}
-	issuedAt := JWT.Claims["iatStr"].(string)
+	issuedAt := claims["iatStr"].(string)
 	// if user isn't created yet there should be no previous issuedAt time
 	if user.Exists(userID) {
 		userConfig := user.GetUserCache(userID).Config

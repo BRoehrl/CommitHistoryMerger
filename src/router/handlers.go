@@ -66,7 +66,7 @@ var templates = template.Must(template.ParseFiles("commits.html", "headAndNavbar
 
 func updatePageData(userCache *git.UserCache) {
 	page.Title = TITLE
-	page.GitClientID = "ea3fc9e6664643bd95b9"
+	page.GitClientID = GlobalServerConfig.GitClientID
 	page.Authors = processor.GetCachedAuthors(userCache)
 	page.Repos = processor.GetCachedRepos(userCache)
 	page.Settings = userCache.Config

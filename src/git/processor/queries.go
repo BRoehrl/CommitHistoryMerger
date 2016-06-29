@@ -60,7 +60,9 @@ func SendCommits(userID string, query Query, commits chan git.Commit) {
 			commits <- commit
 		}
 	}
-	user.SetCachedCommits(userID, uc.CachedCommits)
+	if uc.CachedCommits.Len() > 0 {
+		user.SetCachedCommits(userID, uc.CachedCommits)
+	}
 	close(commits)
 	return
 }
